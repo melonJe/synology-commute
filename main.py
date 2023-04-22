@@ -34,13 +34,13 @@ def read_root(message: str = Body()):
                           come_at=message['timestamp'] % 86400)
         commute.save()
     elif message['text'] == '퇴근':
-        Commute.update(leave_at=message['timestamp'] % 86400).where(
+        commute = Commute.update(leave_at=message['timestamp'] % 86400).where(
             Commute.username == message['username']
             and Commute.date == message['timestamp'] - message['timestamp'] % 86400).execute()
     else:
         return
 
-    return {message['username'], message['timestamp']}
+    print(message['username'], message['timestamp'])
 
 
 def query_string_to_dict(query_string: str):
