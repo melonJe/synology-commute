@@ -28,6 +28,6 @@ class BaseModel(Model):
 
 class Commute(BaseModel):
     username = CharField()
-    date = IntegerField()
-    come_at = IntegerField()
-    leave_at = IntegerField()
+    date = DateField()
+    come_at = TimeField()
+    leave_at = TimeField()
