@@ -15,27 +15,27 @@ app = FastAPI(debug=True)
 def read_root(message: str = Body()):
     message = query_string_to_dict(message)
     print(message)
-    
+
     if message.get('token') and message.get('token') != os.getenv('SYNOLGY_TOKEN'):
         return
 
     if message.get('timestamp'):
-        message['timestamp'] = int(message['timestamp'])
+        message['timestamp'] = int(message['timestamp'][:-3])
     else:
-        message['timestamp'] = int(datetime.timestamp(datetime.now()))
+        message['timestamp'] = datetime.timestamp(datetime.now())
 
-    for parameter in ('username', 'text'):
+    for parameter in ('username', 'text', 'trigger_word'):
         if not message.get(parameter):
             return
         else:
             message[parameter] = urllib.parse.unquote(message[parameter])
 
     print(message)
-    if message['text'] == '출근':
+    if message['trigger_word'] == '출근':
         commute = Commute(username=message['username'], date=message['timestamp'] - message['timestamp'] % 86400,
                           come_at=message['timestamp'] % 86400)
         commute.save()
-    elif message['text'] == '퇴근':
+    elif message['trigger_word'] == '퇴근':
         commute = Commute.update(leave_at=message['timestamp'] % 86400).where(
             Commute.username == message['username']
             and Commute.date == message['timestamp'] - message['timestamp'] % 86400).execute()
