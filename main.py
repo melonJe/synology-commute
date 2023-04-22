@@ -1,7 +1,13 @@
+import os
+import urllib.parse
 import uvicorn
 from datetime import datetime
+from dotenv import load_dotenv
 from fastapi import FastAPI, Body
 from pydantic import BaseModel
+from db.db_Helper import Commute
+
+load_dotenv()
 
 
 class Item(BaseModel):
@@ -11,7 +17,7 @@ class Item(BaseModel):
     user_id: str = ''
     username: str = ''
     post_id: str = ''
-    timestamp: datetime = datetime.now()
+    timestamp: int = datetime.timestamp(datetime.now())
     text: str = ''
     trigger_word: str = ''
 
@@ -22,11 +28,31 @@ app = FastAPI(debug=True)
 @app.post("/")
 def read_root(message: str = Body()):
     message = query_string_to_dict(message)
-    if not message['token'] == 'str':
-        return
-    
     print(message)
-    return message
+    if message.get('token') and message.get('token') != os.getenv('SYNOLGY_TOKEN'):
+        return
+
+    if not message.get('timestamp'):
+        message['timestamp'] = int(datetime.timestamp(datetime.now()))
+
+    for parameter in ('username', 'text'):
+        if not message.get(parameter):
+            return
+        else:
+            message[parameter] = urllib.parse.unquote(message[parameter])
+
+    if message['text'] == '출근':
+        commute = Commute(username=message['username'], date=message['timestamp'] - message['timestamp'] % 86400,
+                          come_at=message['timestamp'] % 86400)
+        commute.save()
+    elif message['text'] == '퇴근':
+        commute = Commute.update(leave_at=message['timestamp'] % 86400).where(
+            Commute.username == message['username']
+            and Commute.date == message['timestamp'] - message['timestamp'] % 86400).execute()
+    else:
+        return
+
+    return {message['username'], message['timestamp']}
 
 
 def query_string_to_dict(query_string: str):
