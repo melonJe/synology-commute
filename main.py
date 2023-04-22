@@ -14,6 +14,8 @@ app = FastAPI(debug=True)
 @app.post("/")
 def read_root(message: str = Body()):
     message = query_string_to_dict(message)
+    print(message)
+    
     if message.get('token') and message.get('token') != os.getenv('SYNOLGY_TOKEN'):
         return
 
