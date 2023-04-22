@@ -32,7 +32,9 @@ def read_root(message: str = Body()):
     if message.get('token') and message.get('token') != os.getenv('SYNOLGY_TOKEN'):
         return
 
-    if not message.get('timestamp'):
+    if message.get('timestamp'):
+        message['timestamp'] = int(message['timestamp'])
+    else:
         message['timestamp'] = int(datetime.timestamp(datetime.now()))
 
     for parameter in ('username', 'text'):
