@@ -1,12 +1,8 @@
 import os
-from xmlrpc.client import _datetime
-
-from peewee import *
 from dotenv import load_dotenv
+from peewee import *
 
 load_dotenv()
-
-from peewee import *
 
 
 class DBHelper(object):

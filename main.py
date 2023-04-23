@@ -1,19 +1,18 @@
 import os
-import urllib.parse
 
 import uvicorn
-from datetime import datetime, timedelta
-from dotenv import load_dotenv
+import urllib.parse
 from fastapi import FastAPI, Body
-from db.db_Helper import Commute
-
-load_dotenv()
+from datetime import datetime, timedelta
+from app.database.db_Helper import Commute
+from app.routers import user
 
 app = FastAPI(debug=True)
+app.include_router(user.router)
 
 
 @app.post("/")
-def read_root(message: str = Body()):
+def add_commute(message: str = Body()):
     message = query_string_to_dict(message)
     print(message)
 
