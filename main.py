@@ -1,5 +1,6 @@
 import os
 import urllib.parse
+
 import uvicorn
 from datetime import datetime
 from dotenv import load_dotenv
@@ -20,9 +21,9 @@ def read_root(message: str = Body()):
         return
 
     if message.get('timestamp'):
-        message['timestamp'] = datetime.fromtimestamp(int(message['timestamp'][:-3]))
+        message['timestamp'] = datetime.utcfromtimestamp(int(message['timestamp'][:-3]))
     else:
-        message['timestamp'] = datetime.now()
+        message['timestamp'] = datetime.utcnow()
 
     for parameter in ('username', 'text', 'trigger_word'):
         if not message.get(parameter):
@@ -55,4 +56,4 @@ def query_string_to_dict(query_string: str):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host='0.0.0.0', port=8000)
