@@ -2,7 +2,7 @@ import os
 import urllib.parse
 
 import uvicorn
-from datetime import datetime
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from fastapi import FastAPI, Body
 from db.db_Helper import Commute
@@ -21,9 +21,9 @@ def read_root(message: str = Body()):
         return
 
     if message.get('timestamp'):
-        message['timestamp'] = datetime.utcfromtimestamp(int(message['timestamp'][:-3]))
+        message['timestamp'] = datetime.fromtimestamp(int(message['timestamp'][:-3])) + timedelta(hours=9)
     else:
-        message['timestamp'] = datetime.utcnow()
+        message['timestamp'] = datetime.now()
 
     for parameter in ('username', 'text', 'trigger_word'):
         if not message.get(parameter):
