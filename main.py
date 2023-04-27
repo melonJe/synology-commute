@@ -2,8 +2,11 @@ import os
 
 import uvicorn
 import urllib.parse
+import pandas as pd
+from io import BytesIO
 from fastapi import FastAPI, Body, Depends
 from datetime import datetime, timedelta
+from starlette.responses import StreamingResponse
 from app.database.db_Helper import Commute, BaseModel
 from app.routers import user
 from typing_extensions import Annotated
@@ -14,11 +17,11 @@ app.include_router(user.router)
 
 class CommuteDto(BaseModel):
     token: str = ''
-    channel_id: str = ''
+    channel_id: int = ''
     channel_name: str = ''
     user_id: str = ''
     username: str = ''
-    post_id: str = ''
+    post_id: int = ''
     time: datetime = datetime.now()
     text: str = ''
     trigger_word: str = ''
@@ -26,15 +29,14 @@ class CommuteDto(BaseModel):
 
 async def commute_parameters_parser(message: str = Body()):
     result = dict()
-    print(message)
     for pair in message.split('&'):
         key, value = pair.split("=")
         if key == 'timestamp':
-            result['date'] = datetime.fromtimestamp(int(value[:3]))
-            break
+            result['date'] = datetime.fromtimestamp(int(value[:-3]))
+            continue
         result[key] = value
 
-    for parameter in ('username', 'text', 'trigger_word'):
+    for parameter in ('text', 'trigger_word'):
         if not result.get(parameter):
             pass
         else:
@@ -43,21 +45,38 @@ async def commute_parameters_parser(message: str = Body()):
 
 
 @app.post("/api")
-def add_commute(message: Annotated[CommuteDto, Depends(commute_parameters_parser)]):
-    if message.token != os.getenv('SYNOLGY_TOKEN'):
+def add_commute(message: Annotated[dict, Depends(commute_parameters_parser)]):
+    print(message)
+    if message['token'] != os.getenv('SYNOLGY_TOKEN'):
         return
 
-    if message.trigger_word == '출근':
+    if message['trigger_word'] == '출근':
         # try 이미 출근 처리 되었을 때
-        commute = Commute(username=message.username, date=message.time.date(), come_at=message.time.time())
+        commute = Commute(username=message['username'], date=message['date'].date(), come_at=message['date'].time())
         commute.save()
-    elif message.trigger_word == '퇴근':
-        commute = Commute.update(leave_at=message.time.time()).where(
-            Commute.username == message.username
-            and Commute.date == message.time.date()).execute()
+    elif message['trigger_word'] == '퇴근':
+        commute = Commute.update(leave_at=message['date'].time()).where(
+            Commute.username == message['username']
+            and Commute.date == message['date'].date()).execute()
     else:
         return
-    return {message.username, message.time}
+    return {message['username'], message['date']}
+
+
+@app.get("/excel")
+def get_csv_data():
+    df = pd.DataFrame(
+        [["Canada", 10], ["USA", 20]],
+        columns=["team", "points"]
+    )
+    buffer = BytesIO()
+    with pd.ExcelWriter(buffer) as writer:
+        df.to_excel(writer, index=False)
+    return StreamingResponse(
+        BytesIO(buffer.getvalue()),
+        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        headers={"Content-Disposition": f"attachment; filename=data.xlsx"}
+    )
 
 
 if __name__ == "__main__":
