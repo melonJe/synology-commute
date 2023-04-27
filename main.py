@@ -30,7 +30,7 @@ async def commute_parameters_parser(message: str = Body()):
     for pair in message.split('&'):
         key, value = pair.split("=")
         if key == 'timestamp':
-            result['date'] = datetime.fromtimestamp(value[:3])
+            result['date'] = datetime.fromtimestamp(int(value[:3]))
             break
         result[key] = value
 
