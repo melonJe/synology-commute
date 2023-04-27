@@ -26,6 +26,7 @@ class CommuteDto(BaseModel):
 
 async def commute_parameters_parser(message: str = Body()):
     result = dict()
+    print(message)
     for pair in message.split('&'):
         key, value = pair.split("=")
         if key == 'timestamp':
@@ -43,11 +44,9 @@ async def commute_parameters_parser(message: str = Body()):
 
 @app.post("/api")
 def add_commute(message: Annotated[CommuteDto, Depends(commute_parameters_parser)]):
-    print(message)
     if message.token != os.getenv('SYNOLGY_TOKEN'):
         return
 
-    print(message)
     if message.trigger_word == '출근':
         # try 이미 출근 처리 되었을 때
         commute = Commute(username=message.username, date=message.time.date(), come_at=message.time.time())
@@ -58,7 +57,6 @@ def add_commute(message: Annotated[CommuteDto, Depends(commute_parameters_parser
             and Commute.date == message.time.date()).execute()
     else:
         return
-    print(message.username, message.time)
     return {message.username, message.time}
 
 
