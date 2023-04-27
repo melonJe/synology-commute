@@ -63,8 +63,9 @@ def add_commute(message: Annotated[dict, Depends(commute_parameters_parser)]):
     return {message['username'], message['date']}
 
 
-@app.get("/excel")
-def get_csv_data():
+@app.get("/excel/{filename}")
+def get_csv_data(filename: str, ):
+    # filename 검증?
     df = pd.DataFrame(
         [["Canada", 10], ["USA", 20]],
         columns=["team", "points"]
@@ -75,7 +76,7 @@ def get_csv_data():
     return StreamingResponse(
         BytesIO(buffer.getvalue()),
         media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        headers={"Content-Disposition": f"attachment; filename=data.xlsx"}
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
 
 

@@ -3,7 +3,7 @@ import json
 import requests
 
 payload = {"user_ids": [29],
-           'file_url': 'https://wormhole.app/eeAJl#OAl_Xk3jJEzyVNfpNMKgmw'
+           'file_url': 'https://www.synology.com/img/company/branding/synology_logo.jpg'
            # "attachments": [{"callback_id": "abc", "text": "attachment", "actions":
            #     [{"type": "file", "name": "resp", "value": "ok", "text": "OK", "style": "green"}]}]
            }
