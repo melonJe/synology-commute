@@ -1,84 +1,159 @@
 import os
-
 import uvicorn
 import urllib.parse
 import pandas as pd
+import requests
+import json
 from io import BytesIO
-from fastapi import FastAPI, Body, Depends
-from datetime import datetime, timedelta
+from fastapi import FastAPI, Body, Depends, Form
+from datetime import datetime
 from starlette.responses import StreamingResponse
-from app.database.db_Helper import Commute, BaseModel
+from app.database.db_Helper import Commute, BaseModel, User
 from app.routers import user
 from typing_extensions import Annotated
+from dotenv import load_dotenv
+from dateutil.relativedelta import relativedelta
+from typing import Union
 
 app = FastAPI(debug=True)
 app.include_router(user.router)
+load_dotenv()
 
 
-class CommuteDto(BaseModel):
-    token: str = ''
-    channel_id: int = ''
-    channel_name: str = ''
-    user_id: str = ''
-    username: str = ''
-    post_id: int = ''
-    time: datetime = datetime.now()
-    text: str = ''
-    trigger_word: str = ''
+class FileDownloadDto(BaseModel):
+    user_id: int
+    start_at: datetime
+    end_at: datetime
 
 
-async def commute_parameters_parser(message: str = Body()):
-    result = dict()
-    for pair in message.split('&'):
-        key, value = pair.split("=")
-        if key == 'timestamp':
-            result['date'] = datetime.fromtimestamp(int(value[:-3]))
-            continue
-        result[key] = value
+# class CommuteDto(BaseModel):
+#     token: str = ""
+#     channel_id: int = ""
+#     channel_name: str = ""
+#     user_id: int = ""
+#     username: str = ""
+#     post_id: int = ""
+#     time: datetime = datetime.now()
+#     text: str = ""
+#     trigger_word: str = ""
 
-    for parameter in ('text', 'trigger_word'):
-        if not result.get(parameter):
-            pass
-        else:
-            result[parameter] = urllib.parse.unquote(result[parameter])
-    return result
+
+# async def commute_parameters_parser(message: str = Body()):
+#     result = dict()
+#     for pair in message.split("&"):
+#         key, value = pair.split("=")
+#         if key == "timestamp":
+#             result["date"] = datetime.fromtimestamp(int(value[:-3]))
+#             continue
+#         result[key] = value
+#
+#     for parameter in ("text", "trigger_word"):
+#         if not result.get(parameter):
+#             pass
+#         else:
+#             result[parameter] = urllib.parse.unquote(result[parameter])
+#     return result
+
+
+async def send_message(synology_url: str, user_ids: list, payload: dict):
+    try:
+        payload.update({"user_ids": user_ids, })
+        print(synology_url, payload, type(payload))
+        requests.post(synology_url, "payload=" + json.dumps(payload), )
+        return True
+    except Exception as error:
+        print(error)
+        return False
 
 
 @app.post("/api")
-def add_commute(message: Annotated[dict, Depends(commute_parameters_parser)]):
-    print(message)
-    if message['token'] != os.getenv('SYNOLGY_TOKEN'):
+async def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], username: Annotated[str, Form()],
+                      timestamp: Annotated[str, Form()], trigger_word: Annotated[str, Form()]):
+    if token != os.getenv("SYNOLGY_TOKEN"):
         return
 
-    if message['trigger_word'] == '출근':
-        # try 이미 출근 처리 되었을 때
-        commute = Commute(username=message['username'], date=message['date'].date(), come_at=message['date'].time())
+    date: datetime = datetime.fromtimestamp(int(timestamp[:-3])) if timestamp else datetime.now()
+
+    if User.select().where(User.user_id == user_id).count() < 1:
+        user = User(user_id=user_id, username=username, )
+        user.save()
+
+    if trigger_word == "출근":
+        # TODO 이미 출근 처리 되었을 때
+        commute = Commute(user_id=user_id, date=date.date(), come_at=date.time())
         commute.save()
-    elif message['trigger_word'] == '퇴근':
-        commute = Commute.update(leave_at=message['date'].time()).where(
-            Commute.username == message['username']
-            and Commute.date == message['date'].date()).execute()
-    else:
-        return
-    return {message['username'], message['date']}
+        pass
+    elif trigger_word == "퇴근":
+        (Commute.update(leave_at=date.time())
+         .where(Commute.user_id == user_id and Commute.date == date.date())
+         .execute())
+        pass
+    await send_message(os.getenv("BOT_URL"), [user_id], {"text": f"{date} {trigger_word} 처리되었습니다."})
+    return {username, date}
 
 
-@app.get("/excel/{filename}")
-def get_csv_data(filename: str, ):
-    # filename 검증?
-    df = pd.DataFrame(
-        [["Canada", 10], ["USA", 20]],
-        columns=["team", "points"]
-    )
-    buffer = BytesIO()
-    with pd.ExcelWriter(buffer) as writer:
-        df.to_excel(writer, index=False)
-    return StreamingResponse(
-        BytesIO(buffer.getvalue()),
-        media_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
-    )
+@app.get("/download/excel/{filename}")
+def get_csv_data(filename: str, username: str, start_at: Union[str, None] = None, end_at: Union[str, None] = None):
+    # TODO token valid
+    if start_at:
+        start_at = datetime.strptime(start_at, '%Y%m%d')
+    if end_at:
+        end_at = datetime.strptime(end_at, '%Y%m%d')
+    print(username, start_at, end_at)
+
+    query = Commute.select()
+    if username:
+        query = query.where(
+            Commute.user_id == User.select(User.user_id).limit(1).where(User.username == username).get())
+    if start_at:
+        query = query.where(Commute.date >= start_at)
+    if end_at:
+        query = query.where(Commute.date <= end_at)
+    if not start_at and not end_at:
+        start_at = datetime.now().date().replace(day=1) - relativedelta(months=3)
+        query = query.where(Commute.date >= start_at)
+    print(query)
+    df = pd.DataFrame(list(query.dicts()))
+    print(df)
+    # buffer = BytesIO()
+    # with pd.ExcelWriter(buffer) as writer:
+    #     df.to_excel(writer, index=False)
+    # return StreamingResponse(
+    #     BytesIO(buffer.getvalue()),
+    #     media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    #     headers={"Content-Disposition": f"attachment; filename={filename}"},
+    # )
+
+
+@app.get("/excel_bot")
+async def get_csv_data(token: Annotated[str, Form()], text: Annotated[str, Form()], user_id: Annotated[int, Form()]):
+    # TODO token valid
+    # TODO text.split(' ') + [None] * (4 - len(text.split(' '))) 수정
+    _, username, start_at, end_at = text.split(' ') + [None] * (4 - len(text.split(' ')))
+    filename = '.xlsx'
+    if end_at:
+        filename = '_' + end_at + filename
+    if start_at:
+        filename = '_' + start_at + filename
+    if username:
+        filename = username + filename
+
+    file_url = f'54.180.187.156:59095/download/excel/{filename}?'
+    if username:
+        file_url = file_url + 'username=' + username
+    if start_at:
+        if len(start_at) != 8:
+            # TODO exception
+            return
+        file_url = file_url + '&' + 'start_at=' + start_at
+    if end_at:
+        if len(end_at) != 8:
+            # TODO exception
+            return
+        file_url = file_url + '&' + 'end_at=' + end_at
+    print(file_url)
+    await send_message(os.getenv("BOT_URL"), [user_id], {"file_url": file_url})
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host='0.0.0.0', port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
