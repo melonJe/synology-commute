@@ -78,6 +78,7 @@ def get_csv_data(filename: str, month: Union[int, None] = None, username: Union[
     if not start_at and not end_at:
         start_at = datetime.now().date().replace(day=1) - relativedelta(months=3)
         query = query.where(Commute.date >= start_at)
+    print(query)
     df = pd.DataFrame(list(query.dicts()))
     stream = BytesIO()
     df.to_excel(stream, index=False)
