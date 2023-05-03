@@ -18,11 +18,11 @@ app = FastAPI(debug=True)
 load_dotenv()
 
 
-def send_message(synology_url: str, user_ids: list, payload: dict):
+async def send_message(synology_url: str, user_ids: list, payload: dict):
     try:
         payload.update({"user_ids": user_ids})
-        print(synology_url, payload, type(payload))
-        requests.post(synology_url, "payload=" + json.dumps(payload))
+        print(synology_url, payload)
+        requests.post(synology_url, "payload=" + json.dumps(payload), )
         return True
     except Exception as error:
         print(error)
@@ -54,7 +54,7 @@ async def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, For
          .where(Commute.user_id == user_id and Commute.date == date.date())
          .execute())
         pass
-    send_message(os.getenv("BOT_URL"), [user_id], {"text": f"{date} {trigger_word} 기록 되었습니다."})
+    await send_message(os.getenv("BOT_URL"), [user_id], {"text": f"{date} {trigger_word} 기록 되었습니다."})
     return {username, date}
 
 
@@ -92,7 +92,7 @@ def get_csv_data(filename: str, month: Union[str, None] = None, username: Union[
     return StreamingResponse(
         BytesIO(buffer.getvalue()),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"},
+        headers={"Content-Disposition": f"attachment; filename={filename}"}
     )
 
 
@@ -118,7 +118,7 @@ async def get_csv_data(token: Annotated[str, Form()], text: Annotated[str, Form(
     if username:
         if username.isdecimal():
             file_url = file_url + 'month=' + username
-            send_message(os.getenv("BOT_URL"), [user_id], {"file_url": file_url})
+            await send_message(os.getenv("BOT_URL"), [user_id], {"file_url": file_url})
             return True
         else:
             file_url = file_url + 'username=' + username
@@ -133,7 +133,7 @@ async def get_csv_data(token: Annotated[str, Form()], text: Annotated[str, Form(
             return
         file_url = file_url + '&' + 'end_at=' + end_at
     print(file_url)
-    send_message(os.getenv("BOT_URL"), [user_id], {"file_url": file_url})
+    await send_message(os.getenv("BOT_URL"), [user_id], {"file_url": file_url})
     return True
 
 
