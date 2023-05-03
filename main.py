@@ -23,7 +23,6 @@ async def send_message(synology_url: str, user_ids: list, payload: dict):
         payload.update({"user_ids": user_ids})
         print(synology_url, payload)
         requests.post(synology_url, "payload=" + json.dumps(payload), )
-        print("synology message complete")
     except Exception as error:
         print(error)
 
@@ -88,7 +87,6 @@ def get_csv_data(filename: str, month: Union[str, None] = None, username: Union[
     buffer = BytesIO()
     with pd.ExcelWriter(buffer) as writer:
         df.to_excel(writer, index=False)
-    print("StreamingResponse")
     return StreamingResponse(
         BytesIO(buffer.getvalue()),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
@@ -118,8 +116,6 @@ async def get_csv_data(token: Annotated[str, Form()], text: Annotated[str, Form(
     if username:
         if username.isdecimal():
             file_url = file_url + 'month=' + username
-            await send_message(os.getenv("BOT_URL"), [user_id], {"file_url": file_url})
-            return True
         else:
             file_url = file_url + 'username=' + username
     if start_at:
@@ -134,7 +130,6 @@ async def get_csv_data(token: Annotated[str, Form()], text: Annotated[str, Form(
         file_url = file_url + '&' + 'end_at=' + end_at
     print(file_url)
     await send_message(os.getenv("BOT_URL"), [user_id], {"file_url": file_url})
-    return True
 
 
 if __name__ == "__main__":
