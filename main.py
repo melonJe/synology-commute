@@ -3,11 +3,10 @@ import uvicorn
 import pandas as pd
 import requests
 import json
+import tempfile
 from io import BytesIO
 from fastapi import FastAPI, Form, responses
 from datetime import datetime
-import tempfile
-from starlette.responses import StreamingResponse
 from app.database.db_Helper import Commute, User
 from typing_extensions import Annotated
 from dotenv import load_dotenv
@@ -22,8 +21,7 @@ load_dotenv()
 def send_message(synology_url: str, user_ids: list, payload: dict):
     try:
         payload.update({"user_ids": user_ids})
-        print(synology_url, payload)
-        requests.post(synology_url, "payload=" + json.dumps(payload), )
+        requests.post(synology_url, "payload=" + json.dumps(payload))
     except Exception as error:
         print(error)
 
@@ -65,13 +63,13 @@ def get_csv_data(filename: str, month: Union[str, None] = None, username: Union[
         start_at = datetime.strptime(start_at, '%Y%m%d')
     if end_at:
         end_at = datetime.strptime(end_at, '%Y%m%d')
-    print(username, start_at, end_at)
 
     query = Commute.select(Commute.user_id, Commute.come_at, Commute.leave_at, Commute.date)
 
     if month:
-        query = query.where(Commute.date <= datetime.now()
-                            and Commute.date <= datetime.now().date().replace(day=1) - relativedelta(months=3))
+        query = query.where(Commute.date <= datetime.utcnow() + relativedelta(hours=9)
+                            , Commute.date <= (datetime.utcnow() + relativedelta(hours=9)).date().replace(
+                day=1) - relativedelta(months=3))
     if username:
         query = query.where(
             Commute.user_id == User.select(User.user_id).limit(1).where(User.username == username).get())
@@ -82,26 +80,22 @@ def get_csv_data(filename: str, month: Union[str, None] = None, username: Union[
     if not start_at and not end_at:
         start_at = datetime.now().date().replace(day=1) - relativedelta(months=3)
         query = query.where(Commute.date >= start_at)
-    print(query)
     df = pd.DataFrame(list(query.dicts()))
-    print(df)
     stream = BytesIO()
     df.to_excel(stream, index=False)
     stream.seek(0)
-    with tempfile.NamedTemporaryFile(mode="w+b", suffix=".xlsx", delete=False) as excel:
-        excel.write(stream.read())
+    with tempfile.NamedTemporaryFile(mode="w+b", suffix=".xlsx", delete=False) as temp_file:
+        temp_file.write(stream.read())
         return responses.FileResponse(
-            excel.name,
-            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={
-                "Content-Disposition": f"attachment; filename={filename}",
-                "Access-Control-Expose-Headers": "Content-Disposition",
-            }
+            temp_file.name, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={"Content-Disposition": f"attachment; filename={filename}",
+                     "Access-Control-Expose-Headers": "Content-Disposition",
+                     }
         )
 
 
 @app.post("/excel-bot")
-def get_csv_data(token: Annotated[str, Form()], text: Annotated[str, Form()], user_id: Annotated[int, Form()]):
+def excel_file_for_bot(token: Annotated[str, Form()], text: Annotated[str, Form()], user_id: Annotated[int, Form()]):
     # TODO intercepter 활용하여 모든 API 사용 할 때 DB에 사용자 저장
     # TODO token valid
     # TODO manger일 경우만
@@ -136,7 +130,6 @@ def get_csv_data(token: Annotated[str, Form()], text: Annotated[str, Form()], us
             # TODO exception
             return
         file_url = file_url + '&' + 'end_at=' + end_at
-    print(file_url)
     send_message(os.getenv("BOT_URL"), [user_id], {"file_url": file_url})
     return True
 
