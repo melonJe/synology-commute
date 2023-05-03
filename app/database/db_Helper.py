@@ -27,7 +27,6 @@ class BaseModel(Model):
 
 
 class Commute(BaseModel):
-    id = IntegerField(primary_key=True)
     user_id = IntegerField()
     date = DateField()
     come_at = TimeField()

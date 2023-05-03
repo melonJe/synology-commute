@@ -68,7 +68,7 @@ def get_csv_data(filename: str, month: Union[str, None] = None, username: Union[
         end_at = datetime.strptime(end_at, '%Y%m%d')
     print(username, start_at, end_at)
 
-    query = Commute.select()
+    query = Commute.select(Commute.user_id, Commute.come_at, Commute.leave_at, Commute.date)
 
     if month:
         query = query.where(Commute.date <= datetime.now()
