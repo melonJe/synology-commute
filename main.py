@@ -3,6 +3,9 @@ import pandas as pd
 import requests
 import json
 import tempfile
+
+from peewee import JOIN
+
 import configuration as conf
 from io import BytesIO
 from fastapi import FastAPI, Form, responses
@@ -62,8 +65,10 @@ def get_csv_data(filename: str, month: Union[int, None] = None, username: Union[
     if end_at:
         end_at = datetime.strptime(end_at, '%Y%m%d')
 
-    query = Commute.select(Commute.user_id, Commute.come_at, Commute.leave_at, Commute.date)
-
+    user = (User.select(User.user_id, User.username, User.manager))
+    predicate = (Commute.user_id == user.c.user_id)
+    query = Commute.select(user.c.username, Commute.come_at, Commute.leave_at, Commute.date).join(user, on=predicate,
+                                                                                                  join_type=JOIN.LEFT_OUTER)
     if month:
         now = datetime.utcnow() + relativedelta(hours=9)
         start_at = now.date().replace(day=1) - relativedelta(months=month)
@@ -82,6 +87,7 @@ def get_csv_data(filename: str, month: Union[int, None] = None, username: Union[
     df = pd.DataFrame(list(query.dicts()))
     stream = BytesIO()
     df.to_excel(stream, index=False)
+    pd.set_option('display.max.colwidth', 10)
     stream.seek(0)
     with tempfile.NamedTemporaryFile(mode="w+b", suffix=".xlsx", delete=False) as temp_file:
         temp_file.write(stream.read())
