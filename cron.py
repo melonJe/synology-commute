@@ -44,30 +44,7 @@ def alert_late():
 
 
 def excel_file_download():
-    # TODO 대표님 이사님 제외
-    now = datetime.now()
-    if now.weekday() in [5, 6]:
-        return
-    commute = (Commute.select(Commute).where(Commute.date == now.date()))
-    predicate = (User.user_id == commute.c.user_id)
-    query = (
-        User.select(User)
-        .join(commute, on=predicate, join_type=JOIN.LEFT_OUTER)
-        .where(commute.c.come_at.is_null())
-    )
-
-    user_id_list = [item.user_id for item in query]
-
-    requests.post(
-        conf.BOT_URL,
-        "payload="
-        + json.dumps(
-            {
-                "text": f"출근 보고 부탁드립니다.",
-                "user_ids": user_id_list
-            }
-        ),
-    )
+    pass
 
 
 if __name__ == "__main__":
