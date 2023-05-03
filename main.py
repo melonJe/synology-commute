@@ -18,7 +18,7 @@ app = FastAPI(debug=True)
 load_dotenv()
 
 
-async def send_message(synology_url: str, user_ids: list, payload: dict):
+def send_message(synology_url: str, user_ids: list, payload: dict):
     try:
         payload.update({"user_ids": user_ids})
         print(synology_url, payload)
@@ -28,8 +28,8 @@ async def send_message(synology_url: str, user_ids: list, payload: dict):
 
 
 @app.post("/api")
-async def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], username: Annotated[str, Form()],
-                      timestamp: Annotated[str, Form()], trigger_word: Annotated[str, Form()]):
+def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], username: Annotated[str, Form()],
+                timestamp: Annotated[str, Form()], trigger_word: Annotated[str, Form()]):
     if token != os.getenv("SYNOLGY_TOKEN"):
         # TODO exception
         return
@@ -52,7 +52,7 @@ async def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, For
          .where(Commute.user_id == user_id and Commute.date == date.date())
          .execute())
         pass
-    await send_message(os.getenv("BOT_URL"), [user_id], {"text": f"{date} {trigger_word} 기록 되었습니다."})
+    send_message(os.getenv("BOT_URL"), [user_id], {"text": f"{date} {trigger_word} 기록 되었습니다."})
     return {username, date}
 
 
@@ -95,7 +95,7 @@ def get_csv_data(filename: str, month: Union[str, None] = None, username: Union[
 
 
 @app.post("/excel-bot")
-async def get_csv_data(token: Annotated[str, Form()], text: Annotated[str, Form()], user_id: Annotated[int, Form()]):
+def get_csv_data(token: Annotated[str, Form()], text: Annotated[str, Form()], user_id: Annotated[int, Form()]):
     # TODO intercepter 활용하여 모든 API 사용 할 때 DB에 사용자 저장
     # TODO token valid
     # TODO manger일 경우만
@@ -116,6 +116,8 @@ async def get_csv_data(token: Annotated[str, Form()], text: Annotated[str, Form(
     if username:
         if username.isdecimal():
             file_url = file_url + 'month=' + username
+            send_message(os.getenv("BOT_URL"), [user_id], {"file_url": file_url})
+            return True
         else:
             file_url = file_url + 'username=' + username
     if start_at:
@@ -129,7 +131,8 @@ async def get_csv_data(token: Annotated[str, Form()], text: Annotated[str, Form(
             return
         file_url = file_url + '&' + 'end_at=' + end_at
     print(file_url)
-    await send_message(os.getenv("BOT_URL"), [user_id], {"file_url": file_url})
+    send_message(os.getenv("BOT_URL"), [user_id], {"file_url": file_url})
+    return True
 
 
 if __name__ == "__main__":
