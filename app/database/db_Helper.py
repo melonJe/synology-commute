@@ -27,7 +27,7 @@ class BaseModel(Model):
 
 
 class Commute(BaseModel):
-    user_id = IntegerField(primary_key=True)
+    user_id = IntegerField()
     date = DateField()
     come_at = TimeField()
     leave_at = TimeField()
@@ -36,4 +36,4 @@ class Commute(BaseModel):
 class User(BaseModel):
     user_id = IntegerField(primary_key=True)
     username = CharField()
-    manager = BooleanField()
+    manager = BooleanField(default=False)

@@ -9,57 +9,21 @@ from fastapi import FastAPI, Body, Depends, Form
 from datetime import datetime
 from starlette.responses import StreamingResponse
 from app.database.db_Helper import Commute, BaseModel, User
-from app.routers import user
 from typing_extensions import Annotated
 from dotenv import load_dotenv
 from dateutil.relativedelta import relativedelta
 from typing import Union
 
 app = FastAPI(debug=True)
-app.include_router(user.router)
+# app.include_router(user.router)
 load_dotenv()
-
-
-class FileDownloadDto(BaseModel):
-    user_id: int
-    start_at: datetime
-    end_at: datetime
-
-
-# class CommuteDto(BaseModel):
-#     token: str = ""
-#     channel_id: int = ""
-#     channel_name: str = ""
-#     user_id: int = ""
-#     username: str = ""
-#     post_id: int = ""
-#     time: datetime = datetime.now()
-#     text: str = ""
-#     trigger_word: str = ""
-
-
-# async def commute_parameters_parser(message: str = Body()):
-#     result = dict()
-#     for pair in message.split("&"):
-#         key, value = pair.split("=")
-#         if key == "timestamp":
-#             result["date"] = datetime.fromtimestamp(int(value[:-3]))
-#             continue
-#         result[key] = value
-#
-#     for parameter in ("text", "trigger_word"):
-#         if not result.get(parameter):
-#             pass
-#         else:
-#             result[parameter] = urllib.parse.unquote(result[parameter])
-#     return result
 
 
 async def send_message(synology_url: str, user_ids: list, payload: dict):
     try:
-        payload.update({"user_ids": user_ids, })
+        payload.update({"user_ids": user_ids})
         print(synology_url, payload, type(payload))
-        requests.post(synology_url, "payload=" + json.dumps(payload), )
+        requests.post(synology_url, "payload=" + json.dumps(payload))
         return True
     except Exception as error:
         print(error)
@@ -70,14 +34,16 @@ async def send_message(synology_url: str, user_ids: list, payload: dict):
 async def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], username: Annotated[str, Form()],
                       timestamp: Annotated[str, Form()], trigger_word: Annotated[str, Form()]):
     if token != os.getenv("SYNOLGY_TOKEN"):
+        # TODO exception
         return
 
     date: datetime = datetime.fromtimestamp(int(timestamp[:-3])) if timestamp else datetime.now()
 
     if User.select().where(User.user_id == user_id).count() < 1:
-        user = User(user_id=user_id, username=username, )
+        user = User(user_id=user_id, username=username)
         user.save()
 
+    # TODO try exception
     if trigger_word == "출근":
         # TODO 이미 출근 처리 되었을 때
         commute = Commute(user_id=user_id, date=date.date(), come_at=date.time())
@@ -88,12 +54,13 @@ async def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, For
          .where(Commute.user_id == user_id and Commute.date == date.date())
          .execute())
         pass
-    await send_message(os.getenv("BOT_URL"), [user_id], {"text": f"{date} {trigger_word} 처리되었습니다."})
+    await send_message(os.getenv("BOT_URL"), [user_id], {"text": f"{date} {trigger_word} 기록 되었습니다."})
     return {username, date}
 
 
 @app.get("/download/excel/{filename}")
-def get_csv_data(filename: str, username: str, start_at: Union[str, None] = None, end_at: Union[str, None] = None):
+def get_csv_data(filename: str, month: Union[str, None] = None, username: Union[str, None] = None,
+                 start_at: Union[str, None] = None, end_at: Union[str, None] = None):
     # TODO token valid
     if start_at:
         start_at = datetime.strptime(start_at, '%Y%m%d')
@@ -102,6 +69,10 @@ def get_csv_data(filename: str, username: str, start_at: Union[str, None] = None
     print(username, start_at, end_at)
 
     query = Commute.select()
+
+    if month:
+        query = query.where(Commute.date <= datetime.now()
+                            and Commute.date <= datetime.now().date().replace(day=1) - relativedelta(months=3))
     if username:
         query = query.where(
             Commute.user_id == User.select(User.user_id).limit(1).where(User.username == username).get())
@@ -125,10 +96,13 @@ def get_csv_data(filename: str, username: str, start_at: Union[str, None] = None
     # )
 
 
-@app.get("/excel_bot")
+@app.get("/excel-bot")
 async def get_csv_data(token: Annotated[str, Form()], text: Annotated[str, Form()], user_id: Annotated[int, Form()]):
     # TODO token valid
+    # TODO 입력 값에 대한 valid
     # TODO text.split(' ') + [None] * (4 - len(text.split(' '))) 수정
+    # TODO commute 12 : 모든 직원의 최근 12개월 출퇴근 기록
+    # man
     _, username, start_at, end_at = text.split(' ') + [None] * (4 - len(text.split(' ')))
     filename = '.xlsx'
     if end_at:
@@ -138,9 +112,15 @@ async def get_csv_data(token: Annotated[str, Form()], text: Annotated[str, Form(
     if username:
         filename = username + filename
 
+    # TODO 본인? API 사용법
     file_url = f'54.180.187.156:59095/download/excel/{filename}?'
     if username:
-        file_url = file_url + 'username=' + username
+        if username.isdecimal():
+            file_url = file_url + 'month=' + username
+            await send_message(os.getenv("BOT_URL"), [user_id], {"file_url": file_url})
+            return True
+        else:
+            file_url = file_url + 'username=' + username
     if start_at:
         if len(start_at) != 8:
             # TODO exception
@@ -153,6 +133,7 @@ async def get_csv_data(token: Annotated[str, Form()], text: Annotated[str, Form(
         file_url = file_url + '&' + 'end_at=' + end_at
     print(file_url)
     await send_message(os.getenv("BOT_URL"), [user_id], {"file_url": file_url})
+    return True
 
 
 if __name__ == "__main__":

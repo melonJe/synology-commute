@@ -12,17 +12,18 @@ from app.database.db_Helper import Commute, User
 load_dotenv()
 
 
-def alert():
+def alert(message: str):
     now = datetime.now()
     if now.weekday() in [5, 6]:
         return
     requests.post(
         os.getenv("COMMUTE_CHAT_URL"),
-        "payload=" + json.dumps({"text": f"{now.date()} 출근 보고 부탁드립니다."}),
+        "payload=" + json.dumps({"text": f"{now.date()} {message} 보고 부탁드립니다."}),
     )
 
 
 def alert_late():
+    # TODO 대표님 이사님 제외
     now = datetime.now()
     if now.weekday() in [5, 6]:
         return
@@ -41,7 +42,7 @@ def alert_late():
         "payload="
         + json.dumps(
             {
-                "text": f"{now.date()} 출근 보고 부탁드립니다.",
+                "text": f"출근 보고 부탁드립니다.",
                 "user_ids": user_id_list
             }
         ),
@@ -49,8 +50,9 @@ def alert_late():
 
 
 if __name__ == "__main__":
-    schedule.every().days.at("08:40").do(alert)
+    schedule.every().days.at("08:40").do(alert('출근'))
     schedule.every().days.at("09:25").do(alert_late)
+    schedule.every().days.at("18:00").do(alert('퇴근'))
     while True:
         schedule.run_pending()
         time.sleep(1)
