@@ -95,9 +95,9 @@ def get_csv_data(filename: str, month: Union[str, None] = None, username: Union[
     )
 
 
-@app.get("/excel-bot")
+@app.post("/excel-bot")
 async def get_csv_data(token: Annotated[str, Form()], text: Annotated[str, Form()], user_id: Annotated[int, Form()]):
-    # TODO intercepter 활용하여 모든 API 사용 할 때 DB에 사용자 저장 
+    # TODO intercepter 활용하여 모든 API 사용 할 때 DB에 사용자 저장
     # TODO token valid
     # TODO manger일 경우만
     # TODO 입력 값에 대한 valid
