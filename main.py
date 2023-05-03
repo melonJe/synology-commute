@@ -4,8 +4,9 @@ import pandas as pd
 import requests
 import json
 from io import BytesIO
-from fastapi import FastAPI, Form
+from fastapi import FastAPI, Form, responses
 from datetime import datetime
+import tempfile
 from starlette.responses import StreamingResponse
 from app.database.db_Helper import Commute, User
 from typing_extensions import Annotated
@@ -84,14 +85,19 @@ def get_csv_data(filename: str, month: Union[str, None] = None, username: Union[
     print(query)
     df = pd.DataFrame(list(query.dicts()))
     print(df)
-    buffer = BytesIO()
-    with pd.ExcelWriter(buffer) as writer:
-        df.to_excel(writer, index=False)
-    return StreamingResponse(
-        BytesIO(buffer.getvalue()),
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        headers={"Content-Disposition": f"attachment; filename={filename}"}
-    )
+    stream = BytesIO()
+    df.to_excel(stream, index=False)
+    stream.seek(0)
+    with tempfile.NamedTemporaryFile(mode="w+b", suffix=".xlsx", delete=False) as excel:
+        excel.write(stream.read())
+        return responses.FileResponse(
+            excel.name,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}",
+                "Access-Control-Expose-Headers": "Content-Disposition",
+            }
+        )
 
 
 @app.post("/excel-bot")
