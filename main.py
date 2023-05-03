@@ -36,7 +36,8 @@ async def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, For
         # TODO exception
         return
 
-    date: datetime = datetime.fromtimestamp(int(timestamp[:-3])) if timestamp else datetime.now()
+    date: datetime = (datetime.fromtimestamp(int(timestamp[:-3])) if timestamp else datetime.utcnow())
+    date = date + relativedelta(hours=9)
 
     if User.select().where(User.user_id == user_id).count() < 1:
         user = User(user_id=user_id, username=username)
@@ -113,7 +114,7 @@ async def get_csv_data(token: Annotated[str, Form()], text: Annotated[str, Form(
         filename = username + filename
 
     # TODO 본인? API 사용법
-    file_url = f'54.180.187.156:59095/download/excel/{filename}?'
+    file_url = f'http://54.180.187.156:59095/download/excel/{filename}?'
     if username:
         if username.isdecimal():
             file_url = file_url + 'month=' + username
