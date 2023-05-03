@@ -23,10 +23,9 @@ async def send_message(synology_url: str, user_ids: list, payload: dict):
         payload.update({"user_ids": user_ids})
         print(synology_url, payload)
         requests.post(synology_url, "payload=" + json.dumps(payload), )
-        return True
+        print("synology message complete")
     except Exception as error:
         print(error)
-        return False
 
 
 @app.post("/api")
@@ -89,6 +88,7 @@ def get_csv_data(filename: str, month: Union[str, None] = None, username: Union[
     buffer = BytesIO()
     with pd.ExcelWriter(buffer) as writer:
         df.to_excel(writer, index=False)
+    print("StreamingResponse")
     return StreamingResponse(
         BytesIO(buffer.getvalue()),
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
