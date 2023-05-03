@@ -66,8 +66,8 @@ def get_csv_data(filename: str, month: Union[int, None] = None, username: Union[
 
     if month:
         now = datetime.utcnow() + relativedelta(hours=9)
-        start_at = now
-        end_at = now.date().replace(day=1) - relativedelta(months=month)
+        start_at = now.date().replace(day=1) - relativedelta(months=month)
+        end_at = now
     if username:
         query = query.where(
             Commute.user_id == User.select(User.user_id).limit(1).where(User.username == username).get())
