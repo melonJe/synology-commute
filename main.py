@@ -1,14 +1,13 @@
 import os
 import uvicorn
-import urllib.parse
 import pandas as pd
 import requests
 import json
 from io import BytesIO
-from fastapi import FastAPI, Body, Depends, Form
+from fastapi import FastAPI, Form
 from datetime import datetime
 from starlette.responses import StreamingResponse
-from app.database.db_Helper import Commute, BaseModel, User
+from app.database.db_Helper import Commute, User
 from typing_extensions import Annotated
 from dotenv import load_dotenv
 from dateutil.relativedelta import relativedelta
@@ -86,23 +85,24 @@ def get_csv_data(filename: str, month: Union[str, None] = None, username: Union[
     print(query)
     df = pd.DataFrame(list(query.dicts()))
     print(df)
-    # buffer = BytesIO()
-    # with pd.ExcelWriter(buffer) as writer:
-    #     df.to_excel(writer, index=False)
-    # return StreamingResponse(
-    #     BytesIO(buffer.getvalue()),
-    #     media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    #     headers={"Content-Disposition": f"attachment; filename={filename}"},
-    # )
+    buffer = BytesIO()
+    with pd.ExcelWriter(buffer) as writer:
+        df.to_excel(writer, index=False)
+    return StreamingResponse(
+        BytesIO(buffer.getvalue()),
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers={"Content-Disposition": f"attachment; filename={filename}"},
+    )
 
 
 @app.get("/excel-bot")
 async def get_csv_data(token: Annotated[str, Form()], text: Annotated[str, Form()], user_id: Annotated[int, Form()]):
+    # TODO intercepter 활용하여 모든 API 사용 할 때 DB에 사용자 저장 
     # TODO token valid
+    # TODO manger일 경우만
     # TODO 입력 값에 대한 valid
+
     # TODO text.split(' ') + [None] * (4 - len(text.split(' '))) 수정
-    # TODO commute 12 : 모든 직원의 최근 12개월 출퇴근 기록
-    # man
     _, username, start_at, end_at = text.split(' ') + [None] * (4 - len(text.split(' ')))
     filename = '.xlsx'
     if end_at:
