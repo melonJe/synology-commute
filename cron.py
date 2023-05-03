@@ -1,5 +1,4 @@
 import json
-import os
 import time
 import requests
 import schedule
@@ -33,7 +32,7 @@ def alert_late():
     user_id_list = [item.user_id for item in query]
 
     requests.post(
-        os.getenv("BOT_URL"),
+        conf.BOT_URL,
         "payload="
         + json.dumps(
             {
@@ -60,7 +59,7 @@ def excel_file_download():
     user_id_list = [item.user_id for item in query]
 
     requests.post(
-        os.getenv("BOT_URL"),
+        conf.BOT_URL,
         "payload="
         + json.dumps(
             {
