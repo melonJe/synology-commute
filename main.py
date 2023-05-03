@@ -104,7 +104,7 @@ async def get_csv_data(token: Annotated[str, Form()], text: Annotated[str, Form(
 
     # TODO text.split(' ') + [None] * (4 - len(text.split(' '))) 수정
     _, username, start_at, end_at = text.split(' ') + [None] * (4 - len(text.split(' ')))
-    filename = '.xlsx'
+    filename = '_excel.xlsx'
     if end_at:
         filename = '_' + end_at + filename
     if start_at:
