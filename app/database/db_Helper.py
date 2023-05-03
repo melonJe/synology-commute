@@ -1,8 +1,5 @@
-import os
-from dotenv import load_dotenv
+import configuration as conf
 from peewee import *
-
-load_dotenv()
 
 
 class DBHelper(object):
@@ -11,13 +8,8 @@ class DBHelper(object):
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._instance.db = MySQLDatabase(
-                host=os.getenv("DB_HOST"),
-                port=int(os.getenv("DB_PORT")),
-                database=os.getenv("DB_NAME"),
-                user=os.getenv("DB_USER"),
-                password=os.getenv("DB_PASS"),
-            )
+            cls._instance.db = MySQLDatabase(host=conf.DB_HOST, port=conf.DB_PORT, database=conf.DB_NAME,
+                                             user=conf.DB_USER, password=conf.DB_PASS)
         return cls._instance
 
 

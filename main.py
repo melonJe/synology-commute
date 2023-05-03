@@ -1,23 +1,21 @@
-import os
 import uvicorn
 import pandas as pd
 import requests
 import json
 import tempfile
+import configuration as conf
 from io import BytesIO
 from fastapi import FastAPI, Form, responses
 from datetime import datetime
 from app.database.db_Helper import Commute, User
 from typing_extensions import Annotated
-from dotenv import load_dotenv
 from dateutil.relativedelta import relativedelta
 from typing import Union
 
 app = FastAPI(debug=True)
+
+
 # app.include_router(user.router)
-load_dotenv()
-
-
 def send_message(synology_url: str, user_ids: list, payload: dict):
     try:
         payload.update({"user_ids": user_ids})
@@ -29,7 +27,7 @@ def send_message(synology_url: str, user_ids: list, payload: dict):
 @app.post("/api")
 def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], username: Annotated[str, Form()],
                 timestamp: Annotated[str, Form()], trigger_word: Annotated[str, Form()]):
-    if token != os.getenv("SYNOLGY_TOKEN"):
+    if token != conf.SYNOLOGY_TOKEN:
         # TODO exception
         return
 
@@ -51,12 +49,12 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
          .where(Commute.user_id == user_id and Commute.date == date.date())
          .execute())
         pass
-    send_message(os.getenv("BOT_URL"), [user_id], {"text": f"{date} {trigger_word} 기록 되었습니다."})
+    send_message(conf.BOT_URL, [user_id], {"text": f"{date} {trigger_word} 기록 되었습니다."})
     return {username, date}
 
 
 @app.get("/download/excel/{filename}")
-def get_csv_data(filename: str, month: Union[str, None] = None, username: Union[str, None] = None,
+def get_csv_data(filename: str, month: Union[int, None] = None, username: Union[str, None] = None,
                  start_at: Union[str, None] = None, end_at: Union[str, None] = None):
     # TODO token valid
     if start_at:
@@ -67,9 +65,9 @@ def get_csv_data(filename: str, month: Union[str, None] = None, username: Union[
     query = Commute.select(Commute.user_id, Commute.come_at, Commute.leave_at, Commute.date)
 
     if month:
-        query = query.where(Commute.date <= datetime.utcnow() + relativedelta(hours=9)
-                            , Commute.date <= (datetime.utcnow() + relativedelta(hours=9)).date().replace(
-                day=1) - relativedelta(months=3))
+        now = datetime.utcnow() + relativedelta(hours=9)
+        start_at = now
+        end_at = now.date().replace(day=1) - relativedelta(months=month)
     if username:
         query = query.where(
             Commute.user_id == User.select(User.user_id).limit(1).where(User.username == username).get())
@@ -116,7 +114,7 @@ def excel_file_for_bot(token: Annotated[str, Form()], text: Annotated[str, Form(
     if username:
         if username.isdecimal():
             file_url = file_url + 'month=' + username
-            send_message(os.getenv("BOT_URL"), [user_id], {"file_url": file_url})
+            send_message(conf.BOT_URL, [user_id], {"file_url": file_url})
             return True
         else:
             file_url = file_url + 'username=' + username
@@ -130,7 +128,7 @@ def excel_file_for_bot(token: Annotated[str, Form()], text: Annotated[str, Form(
             # TODO exception
             return
         file_url = file_url + '&' + 'end_at=' + end_at
-    send_message(os.getenv("BOT_URL"), [user_id], {"file_url": file_url})
+    send_message(conf.BOT_URL, [user_id], {"file_url": file_url})
     return True
 
 

@@ -3,23 +3,18 @@ import os
 import time
 import requests
 import schedule
+import configuration as conf
 from datetime import datetime
-from dotenv import load_dotenv
 from peewee import JOIN
 
 from app.database.db_Helper import Commute, User
-
-load_dotenv()
 
 
 def alert(message: str):
     now = datetime.now()
     if now.weekday() in [5, 6]:
         return
-    requests.post(
-        os.getenv("COMMUTE_CHAT_URL"),
-        "payload=" + json.dumps({"text": f"{now.date()} {message} 보고 부탁드립니다."}),
-    )
+    requests.post(conf.COMMUTE_CHAT_URL, "payload=" + json.dumps({"text": f"{now.date()} {message} 보고 부탁드립니다."}))
 
 
 def alert_late():
