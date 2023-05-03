@@ -48,9 +48,9 @@ def excel_file_download():
 
 
 if __name__ == "__main__":
-    schedule.every().days.at("08:40").do(alert('출근'))
-    schedule.every().days.at("09:25").do(alert_late)
-    schedule.every().days.at("18:00").do(alert('퇴근'))
+    schedule.every().day.at("08:40").do(alert('출근'))
+    schedule.every().day.at("09:25").do(alert_late())
+    schedule.every().day.at("18:00").do(alert('퇴근'))
     while True:
         schedule.run_pending()
         time.sleep(1)
