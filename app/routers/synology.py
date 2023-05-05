@@ -108,7 +108,7 @@ def excel_file_for_bot(token: Annotated[str, Form()], text: Annotated[str, Form(
         filename = parameter[1] + filename
 
     # TODO 본인? API 사용법
-    file_url = f'http://54.180.187.156:59095/download/excel/{filename}?'
+    file_url = f'http://54.180.187.156:59095/api/download/excel/{filename}?'
     if len(parameter) >= 2 and parameter[1]:
         if parameter[1].isdecimal():
             file_url = file_url + 'month=' + parameter[1]
