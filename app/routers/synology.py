@@ -25,7 +25,7 @@ def send_message(synology_url: str, user_ids: list, payload: dict):
         print(error)
 
 
-@router.post("/")
+@router.post("")
 def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], username: Annotated[str, Form()],
                 timestamp: Annotated[str, Form()], trigger_word: Annotated[str, Form()]):
     if token != conf.OUTGOING_COMMUTE_TOKEN:
@@ -36,18 +36,16 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
     date = date + relativedelta(hours=9)
 
     if Employee.select().where(Employee.employee_id == user_id).count() < 1:
-        user = Employee(employee_id=user_id, username=username)
-        user.save()
+        Employee(employee_id=user_id, name=username).save()
 
     # TODO try exception
     if trigger_word == "출근":
         # TODO 이미 출근 처리 되었을 때
-        commute = Commute(user_id=user_id, date=date.date(), come_at=date.time())
-        commute.save()
+        Commute(employee_id=user_id, date=date.date(), come_at=date.time()).save()
         pass
     elif trigger_word == "퇴근":
         (Commute.update(leave_at=date.time())
-         .where(Commute.user_id == user_id and Commute.date == date.date())
+         .where(Commute.employee_id == user_id and Commute.date == date.date())
          .execute())
         pass
     send_message(conf.BOT_COMMUTE_URL, [user_id], {"text": f"{date} {trigger_word} 기록 되었습니다."})
@@ -63,18 +61,19 @@ def get_csv_data(filename: str, month: Union[int, None] = None, username: Union[
     if end_at:
         end_at = datetime.strptime(end_at, '%Y%m%d')
 
-    user = (Employee.select(Employee.employee_id, Employee.username, Employee.manager))
-    predicate = (Commute.user_id == user.c.user_id)
-    query = Commute.select(user.c.username, Commute.come_at, Commute.leave_at, Commute.date).join(user, on=predicate,
-                                                                                                  join_type=JOIN.LEFT_OUTER)
+    employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager))
+    predicate = (Commute.employee_id == employee.c.employee_id)
+    query = Commute.select(employee.c.name, Commute.come_at, Commute.leave_at, Commute.date) \
+        .join(employee, on=predicate, join_type=JOIN.LEFT_OUTER)
+
     if month:
         now = datetime.utcnow() + relativedelta(hours=9)
         start_at = now.date().replace(day=1) - relativedelta(months=month)
         end_at = now
     if username:
         query = query.where(
-            Commute.user_id == Employee.select(Employee.employee_id).limit(1).where(
-                Employee.username == username).get())
+            Commute.employee_id == Employee.select(Employee.employee_id).limit(1).where(
+                Employee.name == username).get())
     if start_at:
         query = query.where(Commute.date >= start_at)
     if end_at:
@@ -107,36 +106,33 @@ def excel_file_for_bot(token: Annotated[str, Form()], text: Annotated[str, Form(
 
     # TODO text.split(' ') + [None] * (4 - len(text.split(' '))) 수정
     parameter = text.split(' ')
-    username = start_at = end_at = ''
+    name = start_at = end_at = ''
     filename = '_excel.xlsx'
     if len(parameter) >= 4:
-        end_at = parameter[3]
-        filename = '_' + end_at + filename
+        filename = '_' + parameter[3] + filename
     if len(parameter) >= 3:
-        start_at = parameter[2]
-        filename = '_' + start_at + filename
+        filename = '_' + parameter[2] + filename
     if len(parameter) >= 2:
-        username = parameter[1]
-        filename = username + filename
+        filename = parameter[1] + filename
 
     # TODO 본인? API 사용법
     file_url = f'http://54.180.187.156:59095/download/excel/{filename}?'
-    if username:
-        if username.isdecimal():
-            file_url = file_url + 'month=' + username
+    if len(parameter) >= 2 and parameter[1]:
+        if parameter[1].isdecimal():
+            file_url = file_url + 'month=' + parameter[1]
             send_message(conf.BOT_COMMUTE_URL, [user_id], {"file_url": file_url})
             return True
         else:
-            file_url = file_url + 'username=' + username
-    if start_at:
-        if len(start_at) != 8:
+            file_url = file_url + 'username=' + parameter[3]
+    if len(parameter) >= 3 and parameter[2]:
+        if len(parameter[2]) != 8:
             # TODO exception
             return
-        file_url = file_url + '&' + 'start_at=' + start_at
-    if end_at:
-        if len(end_at) != 8:
+        file_url = file_url + '&' + 'start_at=' + parameter[2]
+    if len(parameter) >= 4 and parameter[3]:
+        if len(parameter[3]) != 8:
             # TODO exception
             return
-        file_url = file_url + '&' + 'end_at=' + end_at
+        file_url = file_url + '&' + 'end_at=' + parameter[3]
     send_message(conf.BOT_COMMUTE_URL, [user_id], {"file_url": file_url})
     return True
