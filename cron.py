@@ -2,7 +2,7 @@ import json
 import time
 import requests
 import schedule
-import configuration as conf
+import config as conf
 from datetime import datetime
 from peewee import JOIN
 
@@ -13,7 +13,7 @@ def alert():
     now = datetime.now()
     if now.weekday() in [5, 6]:
         return
-    requests.post(conf.COMMUTE_CHAT_URL, "payload=" + json.dumps({"text": f"{now.date()} 보고 부탁드립니다."}))
+    requests.post(conf.INCOMING_COMMUTE_URL, "payload=" + json.dumps({"text": f"{now.date()} 보고 부탁드립니다."}))
 
 
 def alert_late():
@@ -30,8 +30,7 @@ def alert_late():
              )
 
     user_id_list = [item.user_id for item in query]
-    print(user_id_list)
-    requests.post(conf.BOT_URL, "payload=" + json.dumps({"text": f"출근 보고 부탁드립니다.", "user_ids": user_id_list}))
+    requests.post(conf.BOT_COMMUTE_URL, "payload=" + json.dumps({"text": f"출근 보고 부탁드립니다.", "user_ids": user_id_list}))
 
 
 def excel_file_download():
