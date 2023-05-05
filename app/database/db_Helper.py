@@ -1,4 +1,4 @@
-import configuration as conf
+import config as conf
 from peewee import *
 
 
@@ -25,7 +25,7 @@ class Commute(BaseModel):
     leave_at = TimeField()
 
 
-class User(BaseModel):
-    user_id = IntegerField(primary_key=True)
-    username = CharField()
+class Employee(BaseModel):
+    employee_id = IntegerField(primary_key=True)
+    name = CharField()
     manager = BooleanField(default=False)
