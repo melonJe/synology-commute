@@ -13,6 +13,8 @@ from typing_extensions import Annotated
 from dateutil.relativedelta import relativedelta
 from typing import Union
 
+from app.service.file import get_excel_file
+
 router = APIRouter(prefix="/api", tags=["api"], responses={404: {"description": "Not found"}})
 
 
@@ -81,20 +83,10 @@ def get_csv_data(filename: str, month: Union[int, None] = None, username: Union[
     if not start_at and not end_at:
         start_at = datetime.now().date().replace(day=1) - relativedelta(months=3)
         query = query.where(Commute.date >= start_at)
-    print(query)
-    df = pd.DataFrame(list(query.dicts()))
-    stream = BytesIO()
-    df.to_excel(stream, index=False)
-    pd.set_option('display.max.colwidth', 10)
-    stream.seek(0)
-    with tempfile.NamedTemporaryFile(mode="w+b", suffix=".xlsx", delete=False) as temp_file:
-        temp_file.write(stream.read())
-        return responses.FileResponse(
-            temp_file.name, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-            headers={"Content-Disposition": f"attachment; filename={filename}",
-                     "Access-Control-Expose-Headers": "Content-Disposition",
-                     }
-        )
+    query_dict = list(query.order_by(Commute.date.asc()).dicts())
+    name_set = set(item['name'] for item in query_dict)
+    df_dict = {name: pd.DataFrame([item for item in query_dict if item['name'] == name]) for name in name_set}
+    return get_excel_file(filename, df_dict)
 
 
 @router.post("/excel-bot")
