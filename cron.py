@@ -6,10 +6,10 @@ import config as conf
 from datetime import datetime
 from peewee import JOIN
 
-from app.database.db_Helper import Commute, User
+from app.database.db_Helper import Commute, Employee
 
 
-def alert():
+def work_alert():
     now = datetime.now()
     if now.weekday() in [5, 6]:
         return
@@ -21,16 +21,17 @@ def alert_late():
     now = datetime.now()
     if now.weekday() in [5, 6]:
         return
-    commute = (Commute.select(Commute.user_id, Commute.come_at, Commute.leave_at, Commute.date)
+    commute = (Commute.select(Commute.employee_id, Commute.come_at, Commute.leave_at, Commute.date)
                .where(Commute.date == now.date()))
-    predicate = (User.user_id == commute.c.user_id)
-    query = (User.select(User.user_id, User.username, User.manager)
+    predicate = (Employee.employee_id == commute.c.employee_id)
+    query = (Employee.select(Employee.employee_id, Employee.name, Employee.manager)
              .join(commute, on=predicate, join_type=JOIN.LEFT_OUTER)
              .where(commute.c.come_at.is_null())
              )
 
-    user_id_list = [item.user_id for item in query]
-    requests.post(conf.BOT_COMMUTE_URL, "payload=" + json.dumps({"text": f"출근 보고 부탁드립니다.", "user_ids": user_id_list}))
+    employee_id_list = [item.employee_id for item in query]
+    requests.post(conf.BOT_COMMUTE_URL,
+                  "payload=" + json.dumps({"text": f"출근 보고 부탁드립니다.", "user_ids": employee_id_list}))
 
 
 def excel_file_download():
@@ -38,7 +39,7 @@ def excel_file_download():
 
 
 if __name__ == "__main__":
-    schedule.every().day.at("08:40").do(alert)
+    schedule.every().day.at("08:40").do(work_alert)
     schedule.every().day.at("09:25").do(alert_late)
     schedule.every().day.at("18:00").do(alert)
     while True:

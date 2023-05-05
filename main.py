@@ -1,11 +1,10 @@
 import uvicorn
 from fastapi import FastAPI
 
-from app.routers import employee, synology
+from app.routers import synology
 
 app = FastAPI(debug=True)
 
-app.include_router(employee.router)
 app.include_router(synology.router)
 
 if __name__ == "__main__":
