@@ -23,8 +23,8 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
                 timestamp: Annotated[str, Form()], trigger_word: Annotated[str, Form()]):
     check_token(token, conf.OUTGOING_COMMUTE_TOKEN)
 
-    date: datetime = (datetime.fromtimestamp(int(timestamp[:10])) if timestamp else datetime.utcnow())
-    date = date + relativedelta(hours=9)
+    date: datetime = (
+        datetime.fromtimestamp(int(timestamp[:10])) if timestamp else datetime.utcnow() + relativedelta(hours=9))
 
     if Employee.select().where(Employee.employee_id == user_id).count() < 1:
         Employee(employee_id=user_id, name=username).save()
