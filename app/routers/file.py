@@ -16,7 +16,7 @@ from app.helper.security_helper import check_token
 from app.helper.synology_chat_helper import send_message
 from app.service.file import get_excel_file
 
-router = APIRouter(prefix="/files", tags=["file"], responses={404: {"description": "Not found"}})
+router = APIRouter(prefix="/files", tags=["files"], responses={404: {"description": "Not found"}})
 
 
 @router.get("/excel/{filename}")
@@ -50,7 +50,7 @@ def download_excel_file(filename: str, username: Union[str, None] = None,
 
 
 @router.get("/excel/months/{month}/{filename}")
-def download_excel_file(filename: str, month: Union[int, None] = None, username: Union[str, None] = None, ):
+def download_excel_file(filename: str, month: Union[int, None] = None):
     employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager))
     predicate = (Commute.employee_id == employee.c.employee_id)
     query = (Commute.select(employee.c.name, Commute.come_at, Commute.leave_at, Commute.date)
@@ -72,10 +72,10 @@ def download_excel_for_bot(token: Annotated[str, Form()], text: Annotated[str, F
                            user_id: Annotated[int, Form()]):
     # TODO intercepter 활용하여 모든 API 사용 할 때 DB에 사용자 저장
 
-    check_token(token, conf.BOT_COMMUTE_TOKEN)
+    check_token(token, conf.SLASH_COMMUTE_TOKEN)
     employee = Employee.select(Employee.name).limit(1).where(Employee.employee_id == user_id).get()
-    if employee.name != 'mhkim':
-        raise CustomException(message='have no control over excel file download', status_code=403)
+    # if employee.name != 'mhkim':
+    #     raise CustomException(message='have no control over excel file download', status_code=403)
 
     # TODO USER, MONTH 로 API 나누기
 
@@ -88,13 +88,14 @@ def download_excel_for_bot(token: Annotated[str, Form()], text: Annotated[str, F
     if len(parameter) >= 2:
         filename = parameter[1] + filename
     if len(parameter) >= 1:
-        filename = 'excel.xlsx'
+        send_message(conf.BOT_COMMUTE_URL, [user_id], file_url=f'{conf.API_URL}/files/excel/excel.xlsx')
+        return True
 
     file_url = f'{conf.API_URL}/files/excel/{filename}?'
     if len(parameter) >= 2 and parameter[1]:
         if parameter[1].isdecimal():
-            file_url = file_url + 'month=' + parameter[1]
-            send_message(conf.BOT_COMMUTE_URL, [user_id], file_url=file_url)
+            send_message(conf.BOT_COMMUTE_URL, [user_id],
+                         file_url=f"{conf.API_URL}/excel/months/{parameter[1]}/{filename}")
             return True
         else:
             file_url = file_url + 'username=' + parameter[3]
