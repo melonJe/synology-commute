@@ -23,10 +23,6 @@ router = APIRouter(prefix="/files", tags=["files"], responses={404: {"descriptio
 def download_excel_file(filename: str, username: Union[str, None] = None,
                         start_at: Union[str, None] = None, end_at: Union[str, None] = None):
     # TODO token valid
-    if start_at:
-        start_at = datetime.strptime(start_at, '%Y%m%d')
-    if end_at:
-        end_at = datetime.strptime(end_at, '%Y%m%d')
 
     employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager))
     predicate = (Commute.employee_id == employee.c.employee_id)
@@ -37,9 +33,9 @@ def download_excel_file(filename: str, username: Union[str, None] = None,
         query = query.where(Commute.employee_id == Employee.select(Employee.employee_id).limit(1).where(
             Employee.name == username).get())
     if start_at:
-        query = query.where(Commute.date >= start_at)
+        query = query.where(Commute.date >= datetime.strptime(start_at, '%Y%m%d'))
     if end_at:
-        query = query.where(Commute.date < end_at)
+        query = query.where(Commute.date < datetime.strptime(end_at, '%Y%m%d'))
     if not start_at and not end_at:
         start_at = datetime.now().date().replace(day=1) - relativedelta(months=3)
         query = query.where(Commute.date >= start_at)
@@ -87,7 +83,7 @@ def download_excel_for_bot(token: Annotated[str, Form()], text: Annotated[str, F
         filename = '_' + parameter[2] + filename
     if len(parameter) >= 2:
         filename = parameter[1] + filename
-    if len(parameter) >= 1:
+    if len(parameter) == 1:
         send_message(conf.BOT_COMMUTE_URL, [user_id], file_url=f'{conf.API_URL}/files/excel/excel.xlsx')
         return True
 
@@ -98,7 +94,7 @@ def download_excel_for_bot(token: Annotated[str, Form()], text: Annotated[str, F
                          file_url=f"{conf.API_URL}/excel/months/{parameter[1]}/{filename}")
             return True
         else:
-            file_url = file_url + 'username=' + parameter[3]
+            file_url = file_url + 'username=' + parameter[1]
     if len(parameter) >= 3 and parameter[2]:
         if len(parameter[2]) != 8:
             raise CustomException(message=f'Invalid formatted `start_at`', status_code=409)
