@@ -6,7 +6,7 @@ from app.routers import employee, file
 
 app = FastAPI(debug=True)
 
-app.include_router(synology.router)
+app.include_router(employee.router)
 app.include_router(file.router)
 app.add_exception_handler(HttpException.CustomException, HttpException.custom_exception_handler)
 

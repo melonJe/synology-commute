@@ -18,7 +18,7 @@ from app.service.file import get_excel_file
 router = APIRouter(prefix="/employees", tags=["employees"], responses={404: {"description": "Not found"}})
 
 
-@router.post("commute")
+@router.post("/commute")
 def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], username: Annotated[str, Form()],
                 timestamp: Annotated[str, Form()], trigger_word: Annotated[str, Form()]):
     check_token(token, conf.OUTGOING_COMMUTE_TOKEN)
@@ -34,7 +34,7 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
             commute = (
                 Commute.select(Commute.come_at).where(Commute.employee_id == user_id, Commute.date == date.date()))
             if commute:
-                raise CustomException(message=f'already record {str(commute.come_at)}', status_code=409)
+                raise CustomException(message=f'already record {str(commute[0].come_at)}', status_code=409)
             del commute
             Commute(employee_id=user_id, date=date.date(), come_at=date.time()).save()
         elif trigger_word == "퇴근":
