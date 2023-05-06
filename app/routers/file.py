@@ -47,7 +47,7 @@ def download_excel_for_bot(token: Annotated[str, Form()], text: Annotated[str, F
     # if employee.name != 'mhkim':
     #     raise CustomException(message='have no control over excel file download', status_code=403)
 
-    parameter = text.split(' ')
+    parameter = text.strip().split(' ')
     filename = '_excel.xlsx'
     if len(parameter) >= 4:
         filename = '_' + parameter[3] + filename
