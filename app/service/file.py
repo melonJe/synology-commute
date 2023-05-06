@@ -10,10 +10,7 @@ def get_excel_file(filename: str, df_list: dict):
     for key, df in df_list.items():
         df.to_excel(writer, sheet_name=key, index=False)
         worksheet = writer.sheets[key]
-        worksheet.set_column(0, 0, 10)
-        worksheet.set_column(0, 1, 10)
-        worksheet.set_column(0, 2, 10)
-        worksheet.set_column(0, 3, 10)
+        worksheet.autofit()
     writer.close()
     stream.seek(0)
     with tempfile.NamedTemporaryFile(mode="w+b", suffix=".xlsx", delete=False) as temp_file:
