@@ -1,69 +1,14 @@
-import os
-import urllib.parse
 import uvicorn
-from datetime import datetime
-from dotenv import load_dotenv
-from fastapi import FastAPI, Body
-from pydantic import BaseModel
-from db.db_Helper import Commute
+from fastapi import FastAPI
 
-load_dotenv()
-
-
-class Item(BaseModel):
-    token: str = ''
-    channel_id: str = ''
-    channel_name: str = ''
-    user_id: str = ''
-    username: str = ''
-    post_id: str = ''
-    timestamp: int = datetime.timestamp(datetime.now())
-    text: str = ''
-    trigger_word: str = ''
-
+from app.Exceptions import HttpException
+from app.routers import employee, file
 
 app = FastAPI(debug=True)
 
-
-@app.post("/")
-def read_root(message: str = Body()):
-    message = query_string_to_dict(message)
-    print(message)
-    if message.get('token') and message.get('token') != os.getenv('SYNOLGY_TOKEN'):
-        return
-
-    if message.get('timestamp'):
-        message['timestamp'] = int(message['timestamp'])
-    else:
-        message['timestamp'] = int(datetime.timestamp(datetime.now()))
-
-    for parameter in ('username', 'text'):
-        if not message.get(parameter):
-            return
-        else:
-            message[parameter] = urllib.parse.unquote(message[parameter])
-
-    if message['text'] == '출근':
-        commute = Commute(username=message['username'], date=message['timestamp'] - message['timestamp'] % 86400,
-                          come_at=message['timestamp'] % 86400)
-        commute.save()
-    elif message['text'] == '퇴근':
-        commute = Commute.update(leave_at=message['timestamp'] % 86400).where(
-            Commute.username == message['username']
-            and Commute.date == message['timestamp'] - message['timestamp'] % 86400).execute()
-    else:
-        return
-
-    return {message['username'], message['timestamp']}
-
-
-def query_string_to_dict(query_string: str):
-    result = dict()
-    for pair in query_string.split('&'):
-        key, value = pair.split("=")
-        result[key] = value
-    return result
-
+app.include_router(employee.router)
+app.include_router(file.router)
+app.add_exception_handler(HttpException.CustomException, HttpException.custom_exception_handler)
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000)
