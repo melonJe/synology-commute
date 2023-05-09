@@ -23,7 +23,7 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
                 trigger_word: Annotated[str, Form()]):
     check_token(token, conf.OUTGOING_COMMUTE_TOKEN)
 
-    date: datetime.utcnow() + relativedelta(hours=9)
+    date_time = datetime.utcnow() + relativedelta(hours=9)
 
     if Employee.select().where(Employee.employee_id == user_id).count() < 1:
         Employee(employee_id=user_id, name=username).save()
@@ -31,21 +31,21 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
     try:
         if trigger_word == "출근":
             commute = (
-                Commute.select(Commute.come_at).where(Commute.employee_id == user_id, Commute.date == date.date()))
+                Commute.select(Commute.come_at).where(Commute.employee_id == user_id, Commute.date == date_time.date()))
             if commute:
                 raise CustomException(message=f'already record {str(commute[0].come_at)}', status_code=409)
             del commute
-            Commute(employee_id=user_id, date=date.date(), come_at=date.time()).save()
+            Commute(employee_id=user_id, date=date_time.date(), come_at=date_time.time()).save()
         elif trigger_word == "퇴근":
-            (Commute.update(leave_at=date.time())
-             .where(Commute.employee_id == user_id and Commute.date == date.date())
+            (Commute.update(leave_at=date_time.time())
+             .where(Commute.employee_id == user_id and Commute.date == date_time.date())
              .execute())
-        send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"{date} {trigger_word} 기록 되었습니다.")
+        send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"{date_time} {trigger_word} 기록 되었습니다.")
     except CustomException as e:
         raise e
     except Exception as e:
         raise CustomException(message=str(e), status_code=500)
-    return {username, date}
+    return {username, date_time}
 
 
 @router.get("/record/{filename}")
