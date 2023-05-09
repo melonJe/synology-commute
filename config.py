@@ -9,7 +9,9 @@ DB_PORT = int(os.getenv("DB_PORT"))
 DB_NAME = os.getenv("DB_NAME")
 DB_USER = os.getenv("DB_USER")
 DB_PASS = os.getenv("DB_PASS")
-INCOMING_COMMUTE_URL = os.getenv("INCOMING_COMMUTE_URL")
+
+INCOMING_COMMUTE_URL = list(map(str.strip, os.getenv("INCOMING_COMMUTE_URL").split(','))) if os.getenv(
+    "INCOMING_COMMUTE_URL") else None
 
 OUTGOING_COMMUTE_TOKEN = list(map(str.strip, os.getenv("OUTGOING_COMMUTE_TOKEN").split(','))) if os.getenv(
     "OUTGOING_COMMUTE_TOKEN") else None
