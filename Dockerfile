@@ -15,5 +15,4 @@ ENV SLASH_COMMUTE_TOKEN=p4QT9Z9zbLZfjpVVMfg38R6Tsr7lGUGR1yCkH2u9bzpdlEvdFIfjuTkD
 ENV TZ=Asia/Seoul
 
 RUN pip install -r requirements.txt
-ENTRYPOINT ["python", "main.py"]
-#ENTRYPOINT ["python", "cron.py"]
+ENTRYPOINT ["./run-in-docker.sh"]
