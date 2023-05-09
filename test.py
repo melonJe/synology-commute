@@ -1,5 +1,5 @@
 import config as conf
 
 
-print(conf.SLASH_COMMUTE_TOKEN)
-print('p4QT9Z9zbLZfjpVVMfg38R6Tsr7lGUGR1yCkH2u9bzpdlEvdFIfjuTkDWLjjGULN' in conf.SLASH_COMMUTE_TOKEN)
+print(conf.OUTGOING_COMMUTE_TOKEN)
+print('G2cKU5840sxHuzlDTsLUWmSMeIrrzz6brvZTuCVkqVI9v6CoWqC4Fzz1qU8s5RMK' in conf.OUTGOING_COMMUTE_TOKEN)
