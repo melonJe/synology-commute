@@ -21,7 +21,7 @@ class BaseModel(Model):
 
 
 class Commute(BaseModel):
-    no = IntegerField(primary_key=True)
+    no = AutoField(primary_key=True)
     employee_id = IntegerField()
     date = DateField()
     come_at = TimeField()
