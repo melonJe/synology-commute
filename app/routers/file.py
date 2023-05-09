@@ -59,17 +59,17 @@ def download_excel_for_bot(token: Annotated[str, Form()], text: Annotated[str, F
     if len(parameter) >= 2:
         filename = parameter[1] + filename
     if len(parameter) == 1:
-        send_message(conf.BOT_COMMUTE_URL, [user_id], file_url=f'{conf.API_URL}/employees/record/excel.xlsx')
+        send_message(conf.BOT_COMMUTE_URL, [user_id], file_url=f'{conf.HOST_URL}/employees/record/excel.xlsx')
         return True
 
     file_url = ''
     if len(parameter) >= 2 and parameter[1]:
         if parameter[1].isdecimal():
             send_message(conf.BOT_COMMUTE_URL, [user_id],
-                         file_url=f"{conf.API_URL}/files/excel/{filename}?month={parameter[1]}")
+                         file_url=f"{conf.HOST_URL}/files/excel/{filename}?month={parameter[1]}")
             return True
         else:
-            file_url = f'{conf.API_URL}/employees/{parameter[1]}/record/{filename}'
+            file_url = f'{conf.HOST_URL}/employees/{parameter[1]}/record/{filename}'
 
     if len(parameter) >= 3 and parameter[2]:
         if len(parameter[2]) != 8:
