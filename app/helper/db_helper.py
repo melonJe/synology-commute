@@ -22,13 +22,13 @@ class BaseModel(Model):
 
 class Commute(BaseModel):
     no = AutoField(primary_key=True)
-    employee_id = IntegerField()
-    date = DateField()
-    come_at = TimeField()
-    leave_at = TimeField()
+    employee_id = IntegerField(null=True)
+    date = DateField(null=True)
+    come_at = TimeField(null=True)
+    leave_at = TimeField(null=True)
 
 
 class Employee(BaseModel):
     employee_id = IntegerField(primary_key=True)
-    name = CharField()
+    name = CharField(null=True)
     manager = BooleanField(default=False)
