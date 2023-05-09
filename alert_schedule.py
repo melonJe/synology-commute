@@ -25,7 +25,7 @@ def alert_late():
     commute = (Commute.select(Commute.employee_id, Commute.come_at, Commute.leave_at, Commute.date)
                .where(Commute.date == now.date()))
     employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager)
-                .where(~ Employee.name.in_(['mhkim', 'htdo'])))
+                .where(~ Employee.name.in_(conf.MANAGER)))
     predicate = (Employee.employee_id == commute.c.employee_id)
     query = (employee
              .join(commute, on=predicate, join_type=JOIN.LEFT_OUTER)
@@ -49,7 +49,7 @@ def excel_file_download():
         return
 
     employee = (Employee.select(Employee.employee_id).limit(1)
-                .where(Employee.manager | (Employee.name == 'mhkim'))
+                .where(Employee.manager | (Employee.name.in_(conf.MANAGER)))
                 .order_by(Employee.employee_id.asc())
                 .get())
     end_at = now.date().replace(day=1)
