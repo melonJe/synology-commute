@@ -3,6 +3,7 @@ WORKDIR /app
 
 ENV POSTGRES_USER=user
 ENV POSTGRES_PASSWORD=ahqkgnlf
+
 ENV DB_HOST=localhost
 ENV DB_PORT=5432
 ENV DB_NAME=postgres
@@ -23,3 +24,5 @@ RUN apt install -y python3-pip
 COPY . .
 RUN psql --username user postgres < postgres.sql
 RUN pip install -r requirements.txt
+
+ENTRYPOINT ["python3","main.py","&","python3","cron.py"]
