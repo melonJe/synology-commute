@@ -12,7 +12,7 @@ def check_token(token: str, valid_token: list):
         raise CustomException(message='Ineligible token', status_code=401)
 
 
-def api_key_auth(x_api_key: Annotated[str | None, Header(convert_underscores=True)] = None):
+def api_key_auth(x_api_key: Annotated[str, Header(convert_underscores=True)] = None):
     if not x_api_key:
         raise CustomException(
             status_code=status.HTTP_401_UNAUTHORIZED,
