@@ -26,7 +26,7 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
     date_time = datetime.utcnow() + relativedelta(hours=9)
 
     if Employee.select().where(Employee.employee_id == user_id).count() < 1:
-        Employee(employee_id=user_id, name=username).save()
+        Employee(employee_id=user_id, name=username).save(force_insert=True)
 
     try:
         if trigger_word == "출근":

@@ -1,7 +1,7 @@
-from datetime import datetime
+from peewee import fn
 
-from dateutil.relativedelta import relativedelta
+from app.helper.db_helper import Commute
 
-import config as conf
-
-print((datetime.utcnow() + relativedelta(hours=9)).strftime('%Y-%m-%d %H:%M:%S'))
+last_value = Commute.select(fn.Max(Commute.no))[0].no
+next_value = last_value + 1 if last_value else 1
+print(next_value)
