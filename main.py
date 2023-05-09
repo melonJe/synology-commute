@@ -1,6 +1,5 @@
 import uvicorn
 from fastapi import FastAPI
-
 from app.Exceptions import HttpException
 from app.routers import employee, file
 
