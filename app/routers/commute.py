@@ -52,18 +52,18 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
         if trigger_word == "출근":
             if commute:
                 raise CustomException(message=f'already record {str(commute.come_at)}', status_code=409)
-            Commute(employee_id=user_id, date=date_time.date(), come_at=date_time.time()).save()
+            Commute.create(employee_id=user_id, date=date_time.date(), come_at=date_time.time().replace(microsecond=0))
         elif trigger_word == "퇴근":
             send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"출근 기록이 없습니다.")
             if not commute:
                 raise CustomException(message='not exist commute record', status_code=409)
             commute = Commute.get(employee_id=user_id, date=date_time.date())
-            commute.leave_at = date_time.time()
+            commute.leave_at = date_time.time().replace(microsecond=0)
             commute.save()
         send_message(conf.BOT_COMMUTE_URL, [user_id],
-                     text=f"{date_time.strftime('%Y-%m-%d %H:%M:%S')} {trigger_word} 기록 되었습니다.")
+                     text=f"{date_time.replace(microsecond=0)} {trigger_word} 기록 되었습니다.")
     except CustomException as e:
         raise e
     except Exception as e:
         raise CustomException(message=str(e), status_code=500)
-    return {"username": username, "time": date_time.strftime('%Y-%m-%d %H:%M:%S')}
+    return {"username": username, "time": date_time.replace(microsecond=0)}
