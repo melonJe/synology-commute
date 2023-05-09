@@ -42,12 +42,12 @@ def download_excel_for_bot(token: Annotated[str, Form()], text: Annotated[str, F
                            username: Annotated[str, Form()], user_id: Annotated[int, Form()]):
     # TODO intercepter 활용하여 모든 API 사용 할 때 DB에 사용자 저장
     check_token(token, conf.SLASH_COMMUTE_TOKEN)
-
     if Employee.select().where(Employee.employee_id == user_id).count() < 1:
-        Employee(employee_id=user_id, name=username).save()
+        employee = Employee(employee_id=user_id, name=username)
+        employee.save(force_insert=True)
 
-    employee = Employee.select(Employee.name).limit(1).where(Employee.employee_id == user_id).get()
-    if employee.name != 'mhkim':
+    employee = Employee.get_by_id(user_id)
+    if not employee.manager:
         raise CustomException(message='have no control over excel file download', status_code=403)
 
     parameter = text.strip().split(' ')
