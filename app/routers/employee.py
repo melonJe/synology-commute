@@ -40,7 +40,8 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
             (Commute.update(leave_at=date_time.time())
              .where(Commute.employee_id == user_id and Commute.date == date_time.date())
              .execute())
-        send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"{date_time} {trigger_word} 기록 되었습니다.")
+        send_message(conf.BOT_COMMUTE_URL, [user_id],
+                     text=f"{date_time.strftime('%Y-%m-%d %H:%M:%S')} {trigger_word} 기록 되었습니다.")
     except CustomException as e:
         raise e
     except Exception as e:
