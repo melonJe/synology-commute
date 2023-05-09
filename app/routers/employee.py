@@ -45,7 +45,7 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
         raise e
     except Exception as e:
         raise CustomException(message=str(e), status_code=500)
-    return {username, date_time}
+    return {username, date_time.strftime('%Y-%m-%d %H:%M:%S')}
 
 
 @router.get("/record/{filename}")
