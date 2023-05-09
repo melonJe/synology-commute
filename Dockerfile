@@ -23,7 +23,7 @@ ENV SLASH_COMMUTE_TOKEN=p4QT9Z9zbLZfjpVVMfg38R6Tsr7lGUGR1yCkH2u9bzpdlEvdFIfjuTkD
 ENV TZ=Asia/Seoul
 
 RUN apt update
-RUN apt apt-get install libpq-dev
+RUN apt install libpq-dev
 RUN apt install build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libbz2-dev -y
 RUN apt install -y python3
 RUN apt install -y python3-pip
