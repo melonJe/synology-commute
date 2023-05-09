@@ -22,4 +22,4 @@ SLASH_COMMUTE_TOKEN = list(map(str.strip, os.getenv("SLASH_COMMUTE_TOKEN").split
     "SLASH_COMMUTE_TOKEN") else None
 
 MANAGER = list(map(str.strip, os.getenv("MANAGER").split(','))) if os.getenv("MANAGER") else None
-X_API_KEY = list(map(str.strip, os.getenv("X_API_KEY").split(','))) if os.getenv("MANAGER") else None
+X_API_KEY = list(map(str.strip, os.getenv("X_API_KEY").split(','))) if os.getenv("X_API_KEY") else None
