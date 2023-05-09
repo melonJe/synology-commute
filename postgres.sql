@@ -1,5 +1,6 @@
 CREATE TABLE "commute" (
-  "employee_id" serial,
+  "no" serial,
+  "employee_id" int8,
   "date" date DEFAULT NULL,
   "come_at" time DEFAULT NULL,
   "leave_at" time DEFAULT NULL
