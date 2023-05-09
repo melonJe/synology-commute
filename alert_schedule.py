@@ -7,7 +7,8 @@ from datetime import datetime
 from peewee import JOIN
 from app.helper.db_helper import Commute, Employee
 from dateutil.relativedelta import relativedelta
-from app.routers.employee import send_message
+
+from app.helper.synology_chat_helper import send_message
 
 
 def work_alert():

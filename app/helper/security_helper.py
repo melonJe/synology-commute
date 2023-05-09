@@ -1,7 +1,6 @@
 import config
 from app.Exceptions.HttpException import CustomException
-from fastapi import Depends, HTTPException, status, Header
-from fastapi.security import OAuth2PasswordBearer
+from fastapi import status, Header
 from typing_extensions import Annotated
 
 
