@@ -15,7 +15,8 @@ def work_alert():
     now = datetime.utcnow() + relativedelta(hours=9)
     if now.weekday() in [5, 6]:
         return
-    requests.post(conf.INCOMING_COMMUTE_URL, "payload=" + json.dumps({"text": f"{now.date()} 출근 보고 부탁드립니다."}))
+    for url in conf.INCOMING_COMMUTE_URL:
+        requests.post(url, "payload=" + json.dumps({"text": f"{now.date()} 출근 보고 부탁드립니다."}))
 
 
 def alert_late():
@@ -40,7 +41,8 @@ def leave_alert():
     now = datetime.utcnow() + relativedelta(hours=9)
     if now.weekday() in [5, 6]:
         return
-    requests.post(conf.INCOMING_COMMUTE_URL, "payload=" + json.dumps({"text": f"{now.date()} 퇴근 보고 부탁드립니다."}))
+    for url in conf.INCOMING_COMMUTE_URL:
+        requests.post(url, "payload=" + json.dumps({"text": f"{now.date()} 퇴근 보고 부탁드립니다."}))
 
 
 def excel_file_download():
