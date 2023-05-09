@@ -8,8 +8,9 @@ class DBHelper(object):
     def __new__(cls):
         if cls._instance is None:
             cls._instance = super().__new__(cls)
-            cls._instance.db = MySQLDatabase(host=conf.DB_HOST, port=conf.DB_PORT, database=conf.DB_NAME,
-                                             user=conf.DB_USER, password=conf.DB_PASS)
+            cls._instance.db = PostgresqlDatabase(host=conf.DB_HOST, port=conf.DB_PORT, database=conf.DB_NAME,
+                                                  user=conf.DB_USER, password=conf.DB_PASS)
+        # cls._instance.db.create_tables([Commute, Employee])
         return cls._instance
 
 
@@ -19,6 +20,7 @@ class BaseModel(Model):
 
 
 class Commute(BaseModel):
+    no = IntegerField(primary_key=True)
     employee_id = IntegerField()
     date = DateField()
     come_at = TimeField()
@@ -26,6 +28,6 @@ class Commute(BaseModel):
 
 
 class Employee(BaseModel):
-    employee_id = IntegerField()
+    employee_id = IntegerField(primary_key=True)
     name = CharField()
     manager = BooleanField(default=False)

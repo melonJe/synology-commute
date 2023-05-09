@@ -1,1 +1,1 @@
-docker run -d -p 8000:8000 mvw-commute:latest
+docker run -d -p 18000:8000 --mount type=bind,source="./postgresql",target=/var/lib/postgresql/data mvw-commute:latest
