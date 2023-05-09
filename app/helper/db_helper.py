@@ -27,6 +27,11 @@ class Commute(BaseModel):
     come_at = TimeField(null=True)
     leave_at = TimeField(null=True)
 
+    class Meta:
+        indexes = (
+            (('employee_id', 'date'), True),
+        )
+
 
 class Employee(BaseModel):
     employee_id = IntegerField(primary_key=True)

@@ -1,4 +1,3 @@
-from fastapi import APIRouter
 import pandas as pd
 import config as conf
 
@@ -14,7 +13,7 @@ from typing import Union
 
 from app.helper.security_helper import check_token
 from app.helper.synology_chat_helper import send_message
-from app.service.file import get_excel_file
+from app.helper.file_helper import get_excel_file
 
 router = APIRouter(prefix="/files", tags=["files"], responses={404: {"description": "Not found"}})
 
@@ -23,7 +22,8 @@ router = APIRouter(prefix="/files", tags=["files"], responses={404: {"descriptio
 def download_excel_file(filename: str, month: Union[int, None] = None):
     employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager))
     predicate = (Commute.employee_id == employee.c.employee_id)
-    query = (Commute.select(employee.c.name, Commute.come_at, Commute.leave_at, Commute.date)
+    query = (Commute.select(employee.c.name.alias('이름'), Commute.come_at.alias('출근'), Commute.leave_at.alias('퇴근'),
+                            Commute.date.alias('날짜'))
              .join(employee, on=predicate, join_type=JOIN.LEFT_OUTER))
 
     if month:
@@ -32,8 +32,8 @@ def download_excel_file(filename: str, month: Union[int, None] = None):
             (Commute.date >= now.date().replace(day=1) - relativedelta(months=month)) & (Commute.date < now))
 
     query_dict = list(query.order_by(Commute.date.asc()).dicts())
-    name_set = set(item['name'] for item in query_dict)
-    df_dict = {name: pd.DataFrame([item for item in query_dict if item['name'] == name]) for name in name_set}
+    name_set = set(item['이름'] for item in query_dict)
+    df_dict = {name: pd.DataFrame([item for item in query_dict if item['이름'] == name]) for name in name_set}
     return get_excel_file(filename, df_dict)
 
 
@@ -42,11 +42,11 @@ def download_excel_for_bot(token: Annotated[str, Form()], text: Annotated[str, F
                            username: Annotated[str, Form()], user_id: Annotated[int, Form()]):
     # TODO intercepter 활용하여 모든 API 사용 할 때 DB에 사용자 저장
     check_token(token, conf.SLASH_COMMUTE_TOKEN)
-    if Employee.select().where(Employee.employee_id == user_id).count() < 1:
-        employee = Employee(employee_id=user_id, name=username)
-        employee.save(force_insert=True)
 
-    employee = Employee.get_by_id(user_id)
+    employee = Employee.get_or_none(employee_id=user_id)
+    if not employee:
+        employee = Employee.create(employee_id=user_id, name=username)
+        
     if not employee.manager:
         raise CustomException(message='have no control over excel file download', status_code=403)
 
