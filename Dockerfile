@@ -29,5 +29,3 @@ RUN apt install -y python3-pip
 
 COPY . .
 RUN pip install -r requirements.txt
-
-ENTRYPOINT ["python3","main.py","&","python3","cron.py"]
