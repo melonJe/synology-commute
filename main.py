@@ -2,11 +2,12 @@ import uvicorn
 from fastapi import FastAPI
 from app.Exceptions import HttpException
 from app.helper.db_helper import DBHelper, Employee, Commute
-from app.routers import employee, file
+from app.routers import employee, file, commute
 
 app = FastAPI(debug=True)
 
 app.include_router(employee.router)
+app.include_router(commute.router)
 app.include_router(file.router)
 app.add_exception_handler(HttpException.CustomException, HttpException.custom_exception_handler)
 
