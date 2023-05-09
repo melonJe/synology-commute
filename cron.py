@@ -54,7 +54,7 @@ def excel_file_download():
     end_at = now.date().replace(day=1)
     start_at = end_at - relativedelta(months=1)
 
-    file_url = f'{conf.API_URL}/excel/months/1/{start_at.strftime("%Y-%m") + ".xlsx"}'
+    file_url = f'{conf.HOST_URL}/excel/months/1/{start_at.strftime("%Y-%m") + ".xlsx"}'
     send_message(conf.BOT_COMMUTE_URL, [employee.employee_id], file_url=file_url)
 
 
