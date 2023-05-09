@@ -1,36 +1,30 @@
 import pandas as pd
-import config as conf
-
 from peewee import JOIN
-from fastapi import Form, APIRouter
+from fastapi import APIRouter, Depends
 from datetime import datetime
-
 from app.Exceptions.HttpException import CustomException
 from app.dto.employee_dto import EmployeeDto
 from app.helper.db_helper import Commute, Employee
-from typing_extensions import Annotated
 from dateutil.relativedelta import relativedelta
 from typing import Union
-
-from app.helper.security_helper import check_token
-from app.helper.synology_chat_helper import send_message
 from app.helper.file_helper import get_excel_file
+from app.helper.security_helper import api_key_auth
 
 router = APIRouter(prefix="/employees", tags=["employees"], responses={404: {"description": "Not found"}})
 
 
-@router.get("/")
+@router.get("", dependencies=[Depends(api_key_auth)])
 def get_employees():
     return [employee for employee in Employee.select().dicts()]
 
 
-@router.get("/{employee_id}")
+@router.get("/{employee_id}", dependencies=[Depends(api_key_auth)])
 def get_employee(employee_id: int):
     employee = Employee.get_or_none(employee_id)
     return employee.__data__ if employee else None
 
 
-@router.post("/{employee_id}")
+@router.post("/{employee_id}", dependencies=[Depends(api_key_auth)])
 def update_employee(employee_id: int, data: EmployeeDto):
     try:
         employee = Employee.get_or_none(employee_id)
@@ -43,7 +37,7 @@ def update_employee(employee_id: int, data: EmployeeDto):
     return True
 
 
-@router.delete("/{employee_id}")
+@router.delete("/{employee_id}", dependencies=[Depends(api_key_auth)])
 def delete_employee(employee_id: int):
     try:
         employee = Employee.get(employee_id)
@@ -51,35 +45,6 @@ def delete_employee(employee_id: int):
     except Exception:
         raise CustomException(message='failed delete employee', status_code=500)
     return True
-
-
-@router.post("/commute")
-def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], username: Annotated[str, Form()],
-                trigger_word: Annotated[str, Form()]):
-    check_token(token, conf.OUTGOING_COMMUTE_TOKEN)
-
-    date_time = datetime.utcnow() + relativedelta(hours=9)
-
-    if not Employee.get_or_none(employee_id=user_id):
-        Employee.create(employee_id=user_id, name=username)
-
-    try:
-        if trigger_word == "출근":
-            commute = Commute.get_or_none(employee_id=user_id, date=date_time.date())
-            if commute:
-                raise CustomException(message=f'already record {str(commute.come_at)}', status_code=409)
-            Commute(employee_id=user_id, date=date_time.date(), come_at=date_time.time()).save()
-        elif trigger_word == "퇴근":
-            commute = Commute.get(employee_id=user_id, date=date_time.date())
-            commute.leave_at = date_time.time()
-            commute.save()
-        send_message(conf.BOT_COMMUTE_URL, [user_id],
-                     text=f"{date_time.strftime('%Y-%m-%d %H:%M:%S')} {trigger_word} 기록 되었습니다.")
-    except CustomException as e:
-        raise e
-    except Exception as e:
-        raise CustomException(message=str(e), status_code=500)
-    return {"username": username, "time": date_time.strftime('%Y-%m-%d %H:%M:%S')}
 
 
 @router.get("/record/{filename}")
