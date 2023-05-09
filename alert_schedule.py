@@ -65,6 +65,5 @@ if __name__ == "__main__":
     schedule.every().day.at("18:00").do(leave_alert)
     schedule.every().day.at("09:00").do(excel_file_download)
     while True:
-        print(datetime.now())
         schedule.run_pending()
         time.sleep(1)
