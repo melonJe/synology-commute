@@ -1,10 +1,12 @@
-FROM python
-WORKDIR /
+FROM postgres:14.7-bullseye
+WORKDIR /app
 COPY . .
 
+ENV POSTGRES_USER=user
+ENV POSTGRES_PASSWORD=ahqkgnlf
 ENV DB_HOST=localhost
-ENV DB_PORT=3306
-ENV DB_NAME=commute
+ENV DB_PORT=5432
+ENV DB_NAME=postgres
 ENV DB_USER=user
 ENV DB_PASS=ahqkgnlf
 ENV INCOMING_COMMUTE_URL=https://mv-w.com:1112/webapi/entry.cgi?api=SYNO.Chat.External&method=incoming&version=2&token=%22kbBzHLcSleklQKYq>
@@ -14,5 +16,9 @@ ENV BOT_COMMUTE_TOKEN=FgCn8D4JRT6wpQqTU9KH6C88oB9QkVtSrLnNCVmO7Bsj8CUsrj3PE7qTJq
 ENV SLASH_COMMUTE_TOKEN=p4QT9Z9zbLZfjpVVMfg38R6Tsr7lGUGR1yCkH2u9bzpdlEvdFIfjuTkDWLjjGULN
 ENV TZ=Asia/Seoul
 
+RUN psql --username user postgres < postgres.sql
+RUN apt update
+RUN apt install build-essential zlib1g-dev libncurses5-dev libgdbm-dev libnss3-dev libssl-dev libreadline-dev libffi-dev libsqlite3-dev wget libbz2-dev -y
+RUN apt install -y python3
+RUN apt install -y python3-pip
 RUN pip install -r requirements.txt
-ENTRYPOINT ["./run-in-docker.sh"]
