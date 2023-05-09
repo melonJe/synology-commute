@@ -19,6 +19,7 @@ class BaseModel(Model):
 
 
 class Commute(BaseModel):
+    no = IntegerField(primary_key=True)
     employee_id = IntegerField()
     date = DateField()
     come_at = TimeField()
@@ -26,6 +27,6 @@ class Commute(BaseModel):
 
 
 class Employee(BaseModel):
-    employee_id = IntegerField()
+    employee_id = IntegerField(primary_key=True)
     name = CharField()
     manager = BooleanField(default=False)
