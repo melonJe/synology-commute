@@ -1,3 +1,5 @@
+from playhouse.signals import pre_save
+
 import config as conf
 from peewee import *
 
@@ -10,7 +12,6 @@ class DBHelper(object):
             cls._instance = super().__new__(cls)
             cls._instance.db = PostgresqlDatabase(host=conf.DB_HOST, port=conf.DB_PORT, database=conf.DB_NAME,
                                                   user=conf.DB_USER, password=conf.DB_PASS)
-        # cls._instance.db.create_tables([Commute, Employee])
         return cls._instance
 
 
