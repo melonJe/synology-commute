@@ -1,1 +1,1 @@
-docker run -d -p 18000:8000 --name commute mvw-commute:latest
+docker run -d -p 18000:8000 --name commute --link mk-mysql:db mvw-commute:latest
