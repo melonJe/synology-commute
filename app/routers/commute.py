@@ -39,6 +39,7 @@ def get_commute(employee_id: int, start_at: str, end_at: str):
 @router.post("")
 def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], username: Annotated[str, Form()],
                 trigger_word: Annotated[str, Form()]):
+    print(conf.OUTGOING_COMMUTE_TOKEN)
     check_token(token, conf.OUTGOING_COMMUTE_TOKEN)
 
     date_time = datetime.utcnow() + relativedelta(hours=9)
@@ -54,8 +55,8 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
                 raise CustomException(message=f'already record {str(commute.come_at)}', status_code=409)
             Commute.create(employee_id=user_id, date=date_time.date(), come_at=date_time.time().replace(microsecond=0))
         elif trigger_word == "퇴근":
-            send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"출근 기록이 없습니다.")
             if not commute:
+                send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"출근 기록이 없습니다.")
                 raise CustomException(message='not exist commute record', status_code=409)
             commute = Commute.get(employee_id=user_id, date=date_time.date())
             commute.leave_at = date_time.time().replace(microsecond=0)
