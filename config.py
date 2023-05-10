@@ -23,5 +23,6 @@ HOST_URL = os.getenv("HOST_URL")
 SLASH_COMMUTE_TOKEN = list(map(str.strip, os.getenv("SLASH_COMMUTE_TOKEN").split(','))) if os.getenv(
     "SLASH_COMMUTE_TOKEN") else None
 
+CEO = list(map(str.strip, os.getenv("CEO").split(','))) if os.getenv("CEO") else None
 MANAGER = list(map(str.strip, os.getenv("MANAGER").split(','))) if os.getenv("MANAGER") else None
 X_API_KEY = list(map(str.strip, os.getenv("X_API_KEY").split(','))) if os.getenv("X_API_KEY") else None

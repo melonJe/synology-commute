@@ -13,4 +13,4 @@ app.add_exception_handler(HttpException.CustomException, HttpException.custom_ex
 
 if __name__ == "__main__":
     DBHelper().db.create_tables([Employee, Commute])
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
