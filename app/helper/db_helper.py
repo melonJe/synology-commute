@@ -1,5 +1,3 @@
-from playhouse.signals import pre_save
-
 import config as conf
 from peewee import *
 

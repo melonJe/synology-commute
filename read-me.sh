@@ -1,0 +1,1 @@
+docker build --tag mvw-commute:latest . && docker run -d -p 18000:8000 --name commute mvw-commute:latest

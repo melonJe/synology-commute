@@ -51,7 +51,7 @@ def excel_file_download():
         return
 
     employee = (Employee.select(Employee.employee_id).limit(1)
-                .where(Employee.manager | (Employee.name.in_(conf.MANAGER)))
+                .where(Employee.manager | (Employee.name.in_(conf.CEO)))
                 .order_by(Employee.employee_id.asc())
                 .get())
     end_at = now.date().replace(day=1)
@@ -63,7 +63,7 @@ def excel_file_download():
 
 if __name__ == "__main__":
     schedule.every().day.at("08:40").do(work_alert)
-    # schedule.every().day.at("09:25").do(alert_late)
+    schedule.every().day.at("09:25").do(alert_late)
     schedule.every().day.at("18:00").do(leave_alert)
     schedule.every().day.at("09:00").do(excel_file_download)
     while True:
