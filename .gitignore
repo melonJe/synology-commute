@@ -309,3 +309,4 @@ pyrightconfig.json
 .idea
 .vs
 Dockerfile
+nohup.out
