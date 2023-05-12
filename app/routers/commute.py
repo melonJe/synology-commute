@@ -1,5 +1,5 @@
 import config as conf
-from fastapi import Form, APIRouter, Depends
+from fastapi import Form, APIRouter, Depends, Request
 from datetime import datetime
 from app.Exceptions.HttpException import CustomException
 from app.helper.db_helper import Commute, Employee
@@ -37,9 +37,9 @@ def get_commute(employee_id: int, start_at: str, end_at: str):
 
 
 @router.post("")
-def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], username: Annotated[str, Form()],
-                trigger_word: Annotated[str, Form()]):
-    print(conf.OUTGOING_COMMUTE_TOKEN)
+def add_commute(request: Request, token: Annotated[str, Form()], user_id: Annotated[int, Form()],
+                username: Annotated[str, Form()], trigger_word: Annotated[str, Form()]):
+    print(request.client.host)
     check_token(token, conf.OUTGOING_COMMUTE_TOKEN)
 
     date_time = datetime.utcnow() + relativedelta(hours=9)
