@@ -16,7 +16,7 @@ def work_alert():
     if now.weekday() in [5, 6]:
         return
     for url in conf.INCOMING_COMMUTE_URL:
-        requests.post(url, "payload=" + json.dumps({"text": f"{now.date()} 출근 보고 부탁드립니다."}))
+        requests.post(url, "payload=" + json.dumps({"text": f"{now.date()} 출근 시간 알림."}))
 
 
 def alert_late():
@@ -34,7 +34,7 @@ def alert_late():
              )
     employee_id_list = [item.employee_id for item in query]
     requests.post(conf.BOT_COMMUTE_URL,
-                  "payload=" + json.dumps({"text": f"출근 보고 부탁드립니다.", "user_ids": employee_id_list}))
+                  "payload=" + json.dumps({"text": f"출근 시간 알림.", "user_ids": employee_id_list}))
 
 
 def leave_alert():
@@ -42,7 +42,7 @@ def leave_alert():
     if now.weekday() in [5, 6]:
         return
     for url in conf.INCOMING_COMMUTE_URL:
-        requests.post(url, "payload=" + json.dumps({"text": f"{now.date()} 퇴근 보고 부탁드립니다."}))
+        requests.post(url, "payload=" + json.dumps({"text": f"{now.date()} 퇴근 시간 알림."}))
 
 
 def excel_file_download():
