@@ -71,5 +71,5 @@ if __name__ == "__main__":
         try:
             schedule.run_pending()
         except Exception as err:
-            print(f"Unexpected {err=}, {type(err)=}")
+            print(str(err))
         time.sleep(1)
