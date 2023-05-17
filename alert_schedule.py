@@ -33,8 +33,9 @@ def alert_late():
              .where(commute.c.come_at.is_null())
              )
     employee_id_list = [item.employee_id for item in query]
-    requests.post(conf.BOT_COMMUTE_URL,
-                  "payload=" + json.dumps({"text": f"출근 시간 알림.", "user_ids": employee_id_list}))
+    if employee_id_list:
+        requests.post(conf.BOT_COMMUTE_URL,
+                      "payload=" + json.dumps({"text": f"출근 시간 알림.", "user_ids": employee_id_list}))
 
 
 def leave_alert():
