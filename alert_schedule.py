@@ -68,5 +68,8 @@ if __name__ == "__main__":
     schedule.every().day.at("18:00").do(leave_alert)
     schedule.every().day.at("09:00").do(excel_file_download)
     while True:
-        schedule.run_pending()
+        try:
+            schedule.run_pending()
+        except Exception as err:
+            print(f"Unexpected {err=}, {type(err)=}")
         time.sleep(1)
