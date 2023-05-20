@@ -1,6 +1,3 @@
-from app.dto.employee import CreateEmployeeDto
-from app.helper import employee_helper
+import re
 
-user_id = 123123123
-username = 'test'
-employee_helper.create_employee(user_id, CreateEmployeeDto(id=user_id, name=username, manager=False))
+print(re.fullmatch(r"\d{2}:\d{2}", '42:12'))

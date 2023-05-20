@@ -16,7 +16,7 @@ def work_alert():
     now = datetime.utcnow() + timedelta(hours=9)
     if now.weekday() in (5, 6):
         return
-    employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager))
+    employee = (Employee.select())
     employee_id_list = [item.employee_id for item in employee]
     requests.post(conf.BOT_COMMUTE_URL,
                   "payload=" + json.dumps({"text": f"출근 시간 알림.", "user_ids": employee_id_list}))
@@ -26,7 +26,7 @@ def leave_alert():
     now = datetime.utcnow() + timedelta(hours=9)
     if now.weekday() in (5, 6):
         return
-    employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager))
+    employee = (Employee.select())
     employee_id_list = [item.employee_id for item in employee]
     requests.post(conf.BOT_COMMUTE_URL,
                   "payload=" + json.dumps({"text": f"{now.date()} 퇴근 시간 알림.", "user_ids": employee_id_list}))
@@ -36,10 +36,8 @@ def alert_late():
     now = datetime.utcnow() + timedelta(hours=9)
     if now.weekday() in (5, 6):
         return
-    commute = (Commute.select(Commute.employee_id, Commute.come_at, Commute.leave_at, Commute.date)
-               .where(Commute.date == now.date()))
-    employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager)
-                .where(~Employee.manager))
+    commute = (Commute.select().where(Commute.date == now.date()))
+    employee = (Employee.select().where(~Employee.manager))
     predicate = (Employee.employee_id == commute.c.employee_id)
     query = (employee
              .join(commute, on=predicate, join_type=JOIN.LEFT_OUTER)
