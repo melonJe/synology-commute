@@ -1,7 +1,6 @@
-from peewee import fn
+from app.dto.employee import CreateEmployeeDto
+from app.helper import employee_helper
 
-from app.helper.db_helper import Commute
-
-last_value = Commute.select(fn.Max(Commute.no))[0].no
-next_value = last_value + 1 if last_value else 1
-print(next_value)
+user_id = 123123123
+username = 'test'
+employee_helper.create_employee(user_id, CreateEmployeeDto(id=user_id, name=username, manager=False))

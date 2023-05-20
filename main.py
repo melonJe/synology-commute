@@ -8,7 +8,7 @@ app = FastAPI(debug=True)
 
 app.include_router(employee.router)
 app.include_router(commute.router)
-app.include_router(file.router)
+# app.include_router(file.router)
 app.add_exception_handler(HttpException.CustomException, HttpException.custom_exception_handler)
 
 if __name__ == "__main__":
