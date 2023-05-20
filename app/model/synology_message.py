@@ -1,0 +1,10 @@
+def message():
+    token: str
+    channel_id: int
+    channel_name: str
+    user_id: int
+    username: str
+    post_id: int
+    timestamp: int
+    text: str
+    trigger_word: str
