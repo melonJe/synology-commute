@@ -43,7 +43,7 @@ def delete_employee(employee_id: int):
 # def download_excel_file(filename: str, start_at: Union[str, None] = None, end_at: Union[str, None] = None):
 #     # TODO token valid
 #
-#     employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager))
+#     employee = (Employee.select())
 #     predicate = (Commute.employee_id == employee.c.employee_id)
 #     query = (Commute.select(employee.c.name.alias('이름'), Commute.come_at.alias('출근'), Commute.leave_at.alias('퇴근'),
 #                             Commute.date.alias('날짜'))
@@ -62,7 +62,7 @@ def delete_employee(employee_id: int):
 #                         start_at: Union[str, None] = None, end_at: Union[str, None] = None):
 #     # TODO token valid
 #
-#     employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager))
+#     employee = (Employee.select())
 #     predicate = (Commute.employee_id == employee.c.employee_id)
 #     query = (Commute.select(employee.c.name.alias('이름'), Commute.come_at.alias('출근'), Commute.leave_at.alias('퇴근'),
 #                             Commute.date.alias('날짜'))

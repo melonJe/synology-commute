@@ -18,15 +18,15 @@ from app.helper.file_helper import get_excel_file
 
 # @router.get("/excel/{filename}")
 # def download_excel_file(filename: str, month: Union[int, None] = None):
-#     employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager))
+#     employee = (Employee.select())
 #     predicate = (Commute.employee_id == employee.c.employee_id)
 #     query = (Commute.select(employee.c.name.alias('이름'), Commute.come_at.alias('출근'), Commute.leave_at.alias('퇴근'),
-#                             Commute.date.alias('날짜'))
+#                             Commute.date.alias('날짜'),Commute.location.alias('위'))
 #              .join(employee, on=predicate, join_type=JOIN.LEFT_OUTER))
 #
 #     if month:
 #         now = datetime.utcnow() + timedelta(hours=9)
-#         query = query.where(
+#         query = query.where(치
 #             (Commute.date >= now.date().replace(day=1) - relativedelta(months=month)) & (Commute.date < now))
 #
 #     query_dict = list(query.order_by(Commute.date.asc()).dicts())

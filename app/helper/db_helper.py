@@ -24,6 +24,7 @@ class Commute(BaseModel):
     date = DateField(null=True)
     come_at = TimeField(null=True)
     leave_at = TimeField(null=True)
+    location = CharField(null=True)
 
     class Meta:
         indexes = (
