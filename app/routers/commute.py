@@ -50,7 +50,7 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
                 time = item[1:]
             else:
                 send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"시간 포멧이 잘못되었습니다. hh:mm")
-                raise CustomException(message=f"시간 포멧이 잘못되었습니다. hh:mm", status_code=409)
+                raise CustomException(message=f"시간 포멧이 잘못되었습니다. hh:mm", status_code=400)
 
     date_time = datetime.utcnow() + timedelta(hours=9)
 
@@ -63,15 +63,15 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
         if commute:
             if not (location or time):
                 send_message(conf.BOT_COMMUTE_URL, [user_id],
-                             text=f"장소 : {commute.location}\n시간 : {commute.time}\n이미 기록되었습니다.")
-                raise CustomException(message=f'already record {str(commute.come_at)}', status_code=409)
+                             text=f"장소 : {commute.location}\n시간 : {commute.come_at}\n이미 기록되었습니다.")
+                raise CustomException(message=f'already record {commute.come_at}', status_code=409)
             if location:
                 commute.come_at = location
             if time:
                 commute.come_at = time
             commute.save()
             send_message(conf.BOT_COMMUTE_URL, [user_id],
-                         text=f"장소 : {commute.location}\n시간 : {commute.time}\n출근 기록이 수정되었습니다.")
+                         text=f"장소 : {commute.location}\n시간 : {commute.come_at}\n출근 기록이 수정되었습니다.")
         else:
             if not location:
                 location = '궁동'
