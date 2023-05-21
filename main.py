@@ -8,9 +8,9 @@ app = FastAPI(debug=True)
 
 app.include_router(employee.router)
 app.include_router(commute.router)
-# app.include_router(file.router)
+app.include_router(file.router)
 app.add_exception_handler(HttpException.CustomException, HttpException.custom_exception_handler)
 
 if __name__ == "__main__":
     DBHelper().db.create_tables([Employee, Commute])
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=8080)
