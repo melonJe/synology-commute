@@ -16,7 +16,7 @@ def work_alert():
     now = datetime.utcnow() + timedelta(hours=9)
     if now.weekday() in (5, 6):
         return
-    employee = (Employee.select())
+    employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager))
     employee_id_list = [item.employee_id for item in employee]
     requests.post(conf.BOT_COMMUTE_URL,
                   "payload=" + json.dumps({"text": f"출근 시간 알림.", "user_ids": employee_id_list}))
@@ -26,7 +26,7 @@ def leave_alert():
     now = datetime.utcnow() + timedelta(hours=9)
     if now.weekday() in (5, 6):
         return
-    employee = (Employee.select())
+    employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager))
     employee_id_list = [item.employee_id for item in employee]
     requests.post(conf.BOT_COMMUTE_URL,
                   "payload=" + json.dumps({"text": f"{now.date()} 퇴근 시간 알림.", "user_ids": employee_id_list}))
@@ -37,7 +37,7 @@ def alert_late():
     if now.weekday() in (5, 6):
         return
     commute = (Commute.select().where(Commute.date == now.date()))
-    employee = (Employee.select().where(~Employee.manager))
+    employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager).where(~Employee.manager))
     predicate = (Employee.employee_id == commute.c.employee_id)
     query = (employee
              .join(commute, on=predicate, join_type=JOIN.LEFT_OUTER)
@@ -58,10 +58,9 @@ def excel_file_download():
                 .where(Employee.manager)
                 .order_by(Employee.employee_id.asc())
                 .get())
-    end_at = now.date().replace(day=1)
-    start_at = end_at - relativedelta(months=1)
+    start_at = now.date().replace(day=1) - relativedelta(months=1)
 
-    file_url = f'{conf.HOST_URL}/excel/months/1/{start_at.strftime("%Y-%m") + ".xlsx"}'
+    file_url = f'{conf.HOST_URL}/api/files/{start_at.strftime("%Y-%m") + ".xlsx"}?month=1'
     send_message(conf.BOT_COMMUTE_URL, [employee.employee_id], file_url=file_url)
 
 

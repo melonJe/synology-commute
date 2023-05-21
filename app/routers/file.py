@@ -1,4 +1,7 @@
 import pandas as pd
+from dateutil.relativedelta import relativedelta
+from starlette.responses import HTMLResponse
+
 import config as conf
 
 from peewee import JOIN
@@ -14,27 +17,44 @@ from app.helper.security_helper import check_token
 from app.helper.synology_chat_helper import send_message
 from app.helper.file_helper import get_excel_file
 
-# router = APIRouter(prefix="/files", tags=["files"], responses={404: {"description": "Not found"}})
+router = APIRouter(prefix="/api/files", tags=["files"], responses={404: {"description": "Not found"}})
 
-# @router.get("/excel/{filename}")
-# def download_excel_file(filename: str, month: Union[int, None] = None):
-#     employee = (Employee.select())
-#     predicate = (Commute.employee_id == employee.c.employee_id)
-#     query = (Commute.select(employee.c.name.alias('이름'), Commute.come_at.alias('출근'), Commute.leave_at.alias('퇴근'),
-#                             Commute.date.alias('날짜'),Commute.location.alias('위'))
-#              .join(employee, on=predicate, join_type=JOIN.LEFT_OUTER))
-#
-#     if month:
-#         now = datetime.utcnow() + timedelta(hours=9)
-#         query = query.where(치
-#             (Commute.date >= now.date().replace(day=1) - relativedelta(months=month)) & (Commute.date < now))
-#
-#     query_dict = list(query.order_by(Commute.date.asc()).dicts())
-#     name_set = set(item['이름'] for item in query_dict)
-#     df_dict = {name: pd.DataFrame([item for item in query_dict if item['이름'] == name]) for name in name_set}
-#     return get_excel_file(filename, df_dict)
-#
-#
+
+@router.get("/excel/{filename}")
+def download_excel_file(filename: str, month: Union[int, None] = None):
+    employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager))
+    predicate = (Commute.employee_id == employee.c.employee_id)
+    query = (Commute.select(employee.c.name.alias('이름'), Commute.come_at.alias('출근'), Commute.leave_at.alias('퇴근'),
+                            Commute.date.alias('날짜'), Commute.location.alias('위'))
+             .join(employee, on=predicate, join_type=JOIN.LEFT_OUTER))
+
+    if month:
+        now = datetime.utcnow() + timedelta(hours=9)
+        query = query.where(
+            (Commute.date >= now.date().replace(day=1) - relativedelta(months=month)) & (Commute.date < now))
+
+    query_dict = list(query.order_by(Commute.date.asc()).dicts())
+    name_set = set(item['이름'] for item in query_dict)
+    df_dict = {name: pd.DataFrame([item for item in query_dict if item['이름'] == name]) for name in name_set}
+    return get_excel_file(filename, df_dict)
+
+
+@router.get("/csv/{filename}")
+def download_excel_file(filename: str, month: Union[int, None] = None):
+    employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager))
+    predicate = (Commute.employee_id == employee.c.employee_id)
+    query = (Commute.select(employee.c.name.alias('이름'), Commute.come_at.alias('출근'), Commute.leave_at.alias('퇴근'),
+                            Commute.date.alias('날짜'), Commute.location.alias('위치'))
+             .join(employee, on=predicate, join_type=JOIN.LEFT_OUTER))
+
+    if month:
+        now = datetime.utcnow() + timedelta(hours=9)
+        query = query.where(
+            (Commute.date >= now.date().replace(day=1) - relativedelta(months=month)) & (Commute.date < now))
+
+    query_dict = list(query.order_by(Commute.date.asc()).dicts())
+    return pd.DataFrame(query_dict).to_csv()
+
 # @router.post("/excel-bot")
 # def download_excel_for_bot(token: Annotated[str, Form()], text: Annotated[str, Form()],
 #                            username: Annotated[str, Form()], user_id: Annotated[int, Form()]):
