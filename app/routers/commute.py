@@ -45,11 +45,12 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
     for item in text.strip().split(' '):
         if item[0] == '@':
             location = item[1:]
-        if item[0] == '*' and re.fullmatch(r"\d{2}:\d{2}", item[1:]) and int(item[1:3]) < 24 and int(item[4:]) < 60:
-            time = item[1:]
-        else:
-            send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"시간 포멧이 잘못되었습니다. hh:mm")
-            raise CustomException(message=f"시간 포멧이 잘못되었습니다. hh:mm", status_code=409)
+        if item[0] == '*':
+            if re.fullmatch(r"\d{2}:\d{2}", item[1:]) and int(item[1:3]) < 24 and int(item[4:]) < 60:
+                time = item[1:]
+            else:
+                send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"시간 포멧이 잘못되었습니다. hh:mm")
+                raise CustomException(message=f"시간 포멧이 잘못되었습니다. hh:mm", status_code=409)
 
     date_time = datetime.utcnow() + timedelta(hours=9)
 
@@ -99,11 +100,12 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
 
     time = ''
     for item in text.strip().split(' '):
-        if item[0] == '*' and re.fullmatch(r"\d{2}:\d{2}", item[1:]) and int(item[1:3]) < 24 and int(item[4:]) < 60:
-            time = item[1:]
-        else:
-            send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"시간 포멧이 잘못되었습니다. hh:mm")
-            raise CustomException(message=f"시간 포멧이 잘못되었습니다. hh:mm", status_code=409)
+        if item[0] == '*':
+            if re.fullmatch(r"\d{2}:\d{2}", item[1:]) and int(item[1:3]) < 24 and int(item[4:]) < 60:
+                time = item[1:]
+            else:
+                send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"시간 포멧이 잘못되었습니다. hh:mm")
+                raise CustomException(message=f"시간 포멧이 잘못되었습니다. hh:mm", status_code=409)
 
     date_time = datetime.utcnow() + timedelta(hours=9)
 
@@ -116,9 +118,13 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
         if not commute:
             send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"출근 기록이 없습니다.")
             raise CustomException(message='not exist commute record', status_code=409)
-        commute.leave_at = date_time.time().replace(microsecond=0)
-        commute.save()
-        send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"{date_time.replace(microsecond=0)} 퇴근.")
+        else:
+            if time:
+                commute.leave_at = time
+            else:
+                commute.leave_at = date_time.time().replace(microsecond=0)
+            commute.save()
+            send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"{date_time.replace(microsecond=0)} 퇴근.")
     except CustomException as e:
         raise e
     except Exception as e:
