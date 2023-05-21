@@ -66,7 +66,7 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
                              text=f"장소 : {commute.location}\n시간 : {commute.come_at}\n이미 기록되었습니다.")
                 raise CustomException(message=f'already record {commute.come_at}', status_code=409)
             if location:
-                commute.come_at = location
+                commute.location = location
             if time:
                 commute.come_at = time
             commute.save()
