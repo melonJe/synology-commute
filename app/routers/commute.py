@@ -73,18 +73,18 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
             send_message(conf.BOT_COMMUTE_URL, [user_id],
                          text=f"장소 : {commute.location}\n시간 : {commute.time}\n출근 기록이 수정되었습니다.")
         else:
-            if location:
+            if not location:
                 location = '궁동'
 
             if time:
                 Commute.create(employee_id=user_id, date=date_time.date(), location=location,
                                come_at=time)
-                send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"장소 : {location}\n시간 : {time}\n출근 기록되었습니다.")
+                send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"장소 : {location}\n시간 : {time}\n출근 시간이 기록되었습니다.")
             else:
                 Commute.create(employee_id=user_id, date=date_time.date(), location=location,
                                come_at=date_time.time().replace(microsecond=0))
                 send_message(conf.BOT_COMMUTE_URL, [user_id],
-                             text=f"장소 : {location}\n시간 : {date_time.time().replace(microsecond=0)}\n출근 기록되었습니다.")
+                             text=f"장소 : {location}\n시간 : {date_time.time().replace(microsecond=0)}\n출근 시간이 기록되었습니다.")
 
     except CustomException as e:
         raise e
@@ -124,7 +124,7 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
             else:
                 commute.leave_at = date_time.time().replace(microsecond=0)
             commute.save()
-            send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"{date_time.replace(microsecond=0)} 퇴근.")
+            send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"{date_time.replace(microsecond=0)} 퇴근 시간이 기록되었습니다.")
     except CustomException as e:
         raise e
     except Exception as e:
