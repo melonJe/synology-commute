@@ -122,9 +122,9 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
             if time:
                 commute.leave_at = time
             else:
-                commute.leave_at = date_time.time().replace(microsecond=0)
+                time = commute.leave_at = date_time.time().replace(microsecond=0)
             commute.save()
-            send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"{date_time.replace(microsecond=0)} 퇴근 시간이 기록되었습니다.")
+            send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"{time} 퇴근 시간이 기록되었습니다.")
     except CustomException as e:
         raise e
     except Exception as e:
