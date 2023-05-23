@@ -38,7 +38,7 @@ def alert_late():
         return
     commute = (Commute.select().where(Commute.date == now.date()))
     employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager).where(~Employee.manager))
-    predicate = (Employee.employee_id == commute.c.employee_id)
+    predicate = (Employee.c.employee_id == commute.c.employee_id)
     query = (employee
              .join(commute, on=predicate, join_type=JOIN.LEFT_OUTER)
              .where(commute.c.come_at.is_null())
