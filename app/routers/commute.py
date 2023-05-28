@@ -46,7 +46,7 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
         if re.fullmatch(r"\*?\d{2}:\d{2}", item):
             time = item.replace('*', '')
 
-    if time and int(time[:2]) >= 24 or int(time[3:]) >= 60:
+    if time and (int(time[:2]) >= 24 or int(time[3:]) >= 60):
         raise CustomException(message=f"시간 포멧이 잘못되었습니다. hh:mm", status_code=400)
 
     date_time = datetime.utcnow() + timedelta(hours=9)
