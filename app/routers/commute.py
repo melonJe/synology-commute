@@ -91,12 +91,11 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
 
     time = ''
     for item in text.strip().split(' '):
-        if item[0] == '*':
-            if re.fullmatch(r"\d{2}:\d{2}", item[1:]) and int(item[1:3]) < 24 and int(item[4:]) < 60:
-                time = item[1:]
-            else:
-                send_message(conf.BOT_COMMUTE_URL, [user_id], text=f"시간 포멧이 잘못되었습니다. hh:mm")
-                raise CustomException(message=f"시간 포멧이 잘못되었습니다. hh:mm", status_code=409)
+        if re.fullmatch(r"\*?\d{2}:\d{2}", item):
+            time = item.replace('*', '')
+
+    if time and (int(time[:2]) >= 24 or int(time[3:]) >= 60):
+        raise CustomException(message=f"시간 포멧이 잘못되었습니다. hh:mm", status_code=400)
 
     date_time = datetime.utcnow() + timedelta(hours=9)
 
