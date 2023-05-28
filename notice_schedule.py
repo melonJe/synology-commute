@@ -18,8 +18,9 @@ def work_alert():
         return
     employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager))
     employee_id_list = [item.employee_id for item in employee]
-    requests.post(conf.BOT_COMMUTE_URL,
-                  "payload=" + json.dumps({"text": f"출근 시간 알림.", "user_ids": employee_id_list}))
+    employee_id_list = [29]
+    if employee_id_list:
+        requests.post(conf.BOT_COMMUTE_URL, "payload=" + json.dumps({"text": f"출근 시간 알림", "user_ids": employee_id_list}))
 
 
 def leave_alert():
@@ -28,8 +29,8 @@ def leave_alert():
         return
     employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager))
     employee_id_list = [item.employee_id for item in employee]
-    requests.post(conf.BOT_COMMUTE_URL,
-                  "payload=" + json.dumps({"text": f"{now.date()} 퇴근 시간 알림.", "user_ids": employee_id_list}))
+    if employee_id_list:
+        requests.post(conf.BOT_COMMUTE_URL, "payload=" + json.dumps({"text": f"{now.date()} 퇴근 시간 알림", "user_ids": employee_id_list}))
 
 
 def alert_late():
@@ -45,23 +46,25 @@ def alert_late():
              )
     employee_id_list = [item.employee_id for item in query]
     if employee_id_list:
-        requests.post(conf.BOT_COMMUTE_URL,
-                      "payload=" + json.dumps({"text": f"출근 시간 알림.", "user_ids": employee_id_list}))
+        requests.post(conf.BOT_COMMUTE_URL, "payload=" + json.dumps({"text": f"출근 시간 알림", "user_ids": employee_id_list}))
 
 
 def excel_file_download():
     now = datetime.utcnow() + timedelta(hours=9)
-    if now.day != 1:
+    if now.weekday() == 0 and now.month != (now + timedelta(days=7)).month:
+        start_at = now.date().replace(month=1)
+    elif now.day == 1:
+        start_at = now.date() - relativedelta(months=1)
+    else:
         return
 
-    employee = (Employee.select(Employee.employee_id).limit(1)
+    employee = (Employee.select(Employee.employee_id)
                 .where(Employee.manager)
-                .order_by(Employee.employee_id.asc())
-                .get())
-    start_at = now.date().replace(day=1) - relativedelta(months=1)
-
-    file_url = f'{conf.HOST_URL}/api/files/{start_at.strftime("%Y-%m") + ".xlsx"}?month=1'
-    send_message(conf.BOT_COMMUTE_URL, [employee.employee_id], file_url=file_url)
+                .order_by(Employee.employee_id.asc()))
+    recipient = [item.employee_id for item in employee]
+    file_url = f'{conf.HOST_URL}/api/files/excel/{start_at.strftime("%Y-%m") + ".xlsx"}?start_at={start_at.strftime("%Y%m%d")}'
+    if recipient:
+        send_message(conf.BOT_COMMUTE_URL, recipient, file_url=file_url)
 
 
 if __name__ == "__main__":

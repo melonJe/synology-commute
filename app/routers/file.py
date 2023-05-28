@@ -14,6 +14,7 @@ from typing_extensions import Annotated
 from typing import Union
 
 from app.helper.security_helper import check_token
+from app.helper.sql_helper import where_time
 from app.helper.synology_chat_helper import send_message
 from app.helper.file_helper import get_excel_file
 
@@ -21,44 +22,50 @@ router = APIRouter(prefix="/api/files", tags=["files"], responses={404: {"descri
 
 
 @router.get("/excel/{filename}")
-def download_excel_file(filename: str, month: Union[int, None] = None):
+def download_excel_file(filename: str, start_at: Union[str, None] = None, end_at: str = (datetime.utcnow() - timedelta(hours=15)).strftime('%Y%m%d')):
+    if not start_at:
+        raise CustomException(message=f"`start_at` is required", status_code=400)
     employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager))
     predicate = (Commute.employee_id == employee.c.employee_id)
-    query = (Commute.select(employee.c.name.alias('이름'), Commute.come_at.alias('출근'), Commute.leave_at.alias('퇴근'),
-                            Commute.date.alias('날짜'), Commute.location.alias('위'))
+    query = (Commute.select(Commute.date.alias('날짜'), employee.c.name.alias('이름'), Commute.come_at.alias('출근'), Commute.leave_at.alias('퇴근'), Commute.location.alias('위치'))
              .join(employee, on=predicate, join_type=JOIN.LEFT_OUTER))
 
-    if month:
-        now = datetime.utcnow() + timedelta(hours=9)
-        query = query.where(
-            (Commute.date >= now.date().replace(day=1) - relativedelta(months=month)) & (Commute.date < now))
+    where_time(query, start_at, end_at)
+
+    date_frame = pd.date_range(start=start_at, end=end_at, name="날짜").to_frame(index=False)
+    date_frame["요일"] = date_frame['날짜'].dt.strftime('%a')
+    date_frame["날짜"] = pd.to_datetime(date_frame['날짜'])
 
     query_dict = list(query.order_by(Commute.date.asc()).dicts())
     name_set = set(item['이름'] for item in query_dict)
     df_dict = {name: pd.DataFrame([item for item in query_dict if item['이름'] == name]) for name in name_set}
+
+    for key, item in df_dict.items():
+        item['날짜'] = pd.to_datetime(item['날짜'])
+        df_dict[key] = pd.merge(left=date_frame, right=item, on='날짜', how='outer')
+        df_dict[key].sort_values(by='날짜', ascending=True)
+
     return get_excel_file(filename, df_dict)
 
 
 @router.get("/csv/{filename}")
-def download_excel_file(filename: str, month: Union[int, None] = None):
+def download_csv_file(filename: str, start_at: Union[int, None] = None):
     employee = (Employee.select(Employee.employee_id, Employee.name, Employee.manager))
     predicate = (Commute.employee_id == employee.c.employee_id)
-    query = (Commute.select(employee.c.name.alias('이름'), Commute.come_at.alias('출근'), Commute.leave_at.alias('퇴근'),
-                            Commute.date.alias('날짜'), Commute.location.alias('위치'))
+    query = (Commute.select(Commute.date.alias('날짜'), employee.c.name.alias('이름'), Commute.come_at.alias('출근'), Commute.leave_at.alias('퇴근'), Commute.location.alias('위치'))
              .join(employee, on=predicate, join_type=JOIN.LEFT_OUTER))
 
-    if month:
+    if start_at:
         now = datetime.utcnow() + timedelta(hours=9)
-        query = query.where(
-            (Commute.date >= now.date().replace(day=1) - relativedelta(months=month)) & (Commute.date < now))
+        query = query.where((Commute.date >= start_at) & (Commute.date < now))
 
     query_dict = list(query.order_by(Commute.date.asc()).dicts())
     return pd.DataFrame(query_dict).to_csv()
 
 # @router.post("/excel-bot")
-# def download_excel_for_bot(token: Annotated[str, Form()], text: Annotated[str, Form()],
-#                            username: Annotated[str, Form()], user_id: Annotated[int, Form()]):
+# def download_excel_for_bot(token: Annotated[str, Form()], text: Annotated[str, Form()], username: Annotated[str, Form()], user_id: Annotated[int, Form()]):
 #     # TODO intercepter 활용하여 모든 API 사용 할 때 DB에 사용자 저장
+#     # TODO URL 변경 필요
 #     check_token(token, conf.SLASH_EXCEL_TOKEN)
 #
 #     employee = Employee.get_or_none(employee_id=user_id)
