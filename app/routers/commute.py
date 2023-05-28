@@ -42,7 +42,7 @@ def add_commute(token: Annotated[str, Form()], user_id: Annotated[int, Form()], 
     location = time = ''
     for item in text.strip().split(' ')[1:]:
         if re.fullmatch(r"@?[a-zA-Zㄱ-힣]*", item):
-            location = item[1:].replace('@', '')
+            location = item.replace('@', '')
         if re.fullmatch(r"\*?\d{2}:\d{2}", item):
             time = item.replace('*', '')
 
